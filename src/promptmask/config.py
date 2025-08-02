@@ -1,6 +1,7 @@
 # src/promptmask/config.py
 
 import os
+import string
 from pathlib import Path
 from .utils import tomllib, merge_configs, logger
 
@@ -55,6 +56,18 @@ def load_config(config_override = {}, config_file: str = "") -> dict:
     # Apply environment variables
     config["llm_api"]["base"] = os.getenv("LOCALAI_API_BASE", config["llm_api"]["base"])
     config["llm_api"]["key"] = os.getenv("LOCALAI_API_KEY", config["llm_api"]["key"])
+
+    # Apply mask_wrapper
+    config["prompt"]["system_template"] = string.Template(cfg["prompt"]["system_template"]).safe_substitute(
+            sensitive_include=cfg["sensitive"]["include"],
+            sensitive_exclude=cfg["sensitive"]["exclude"],
+            mask_left=cfg["mask_wrapper"]["left"],
+            mask_right=cfg["mask_wrapper"]["right"],
+        )
+    config["prompt"]["examples"] = string.Template(cfg["prompt"]["examples"]).safe_substitute(
+            mask_left=cfg["mask_wrapper"]["left"],
+            mask_right=cfg["mask_wrapper"]["right"], 
+        )
 
     if _is_verbose(config):
         logger.info(f"config: {config}")

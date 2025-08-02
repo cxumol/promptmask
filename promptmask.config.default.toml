@@ -27,12 +27,12 @@ system_template = """/no_think You are a data masking API to mask sensitive data
 Config:
 - Sensitive: ${sensitive_include}
 - Non-Sensitive: ${sensitive_exclude}
-- Mask Format: `${mask_left}UPPER_SNAKE_CASE${mask_right}`
+- Mask Format: ${mask_left}UPPER_SNAKE_CASE${mask_right}
 
 The output MUST strictly adhere to the following format, and NO other text MUST be included. If no sensitive data is found, respond with an empty JSON object: `{}`.
 <mask_mapping>{"test@example.com":"${mask_left}USER_EMAIL_1${mask_right}","P@ssword123!":"${mask_left}USER_PASSWORD_1${mask_right}"}</mask_mapping>"""
 
-user_template = "<user_input_text>\n{text_to_mask}\n</user_input_text>"
+user_template = "<user_input_text>\n${text_to_mask}\n</user_input_text>"
 
 # Few-shot examples to improve local LLM accuracy.
 examples = [
