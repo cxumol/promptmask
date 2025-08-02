@@ -69,7 +69,8 @@ def load_config(config_override = {}, config_file: str = "") -> dict:
             mask_right=cfg["mask_wrapper"]["right"], 
         )
 
-    if _is_verbose(config):
-        logger.info(f"config: {config}")
-
+    if self.verbose:
+        logger.setLevel("DEBUG")
+    logger.debug(f"Final loaded config:\n{config}")
+    
     return config
