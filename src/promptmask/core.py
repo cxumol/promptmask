@@ -18,9 +18,6 @@ class PromptMask:
             config_file (str, optional): Path to a custom TOML config file.
         """
         self.config = load_config(config, config_file)
-        self.verbose = self.config.get("general", {}).get("verbose", False)
-        if self.verbose:
-            logger.setLevel("DEBUG")
         
         self.client = OpenAI(base_url=self.config["llm_api"]["base"], api_key=self.config["llm_api"]["key"])
         self.async_client = AsyncOpenAI(base_url=self.config["llm_api"]["base"], api_key=self.config["llm_api"]["key"])
@@ -31,8 +28,7 @@ class PromptMask:
                 models = self.client.models.list()
                 if models.data:
                     self.config["llm_api"]["model"] = models.data[0].id
-                    if self.verbose:
-                        logger.info(f"Auto-selected local model: {self.config['llm_api']['model']}")
+                    logger.debug(f"Auto-selected local model: {self.config['llm_api']['model']}")
                 else:
                     raise ValueError("No models found at the local LLM API endpoint.")
             except Exception as e:
@@ -54,7 +50,7 @@ class PromptMask:
         """Parses the local LLM response to extract the mask map."""
         try:
             json_str = _btwn(response_content, "{", "}")
-            print("json_str::",json_str)
+            logger.debug("json_str::",json_str)
             mask_map = json.loads(json_str)
             # Ensure 1:1 mapping by reversing the map to check for duplicate masks
             reversed_map = {v: k for k, v in mask_map.items()} #raise TypeError if v is unhashable
@@ -73,8 +69,7 @@ class PromptMask:
             return "", {}
             
         messages = self._build_mask_prompt(text)
-        if self.verbose:
-            logger.debug(f"Masking request to local LLM: {messages}")
+        logger.debug(f"Message sending to local LLM: {messages}")
 
         completion = self.client.chat.completions.create(
             model=self.config["llm_api"]["model"],
@@ -82,8 +77,7 @@ class PromptMask:
             temperature=0.0,
         )
         response_content = completion.choices[0].message.content
-        if self.verbose:
-            logger.debug(f"Masking response from local LLM {len(response_content)}: {response_content}")
+        logger.debug(f"Mask mapping by local LLM (length: {len(response_content)}): {response_content}")
 
         mask_map = self._parse_mask_response(response_content)
         
@@ -164,8 +158,7 @@ class PromptMask:
             return "", {}
             
         messages = self._build_mask_prompt(text)
-        if self.verbose:
-            logger.debug(f"Async masking request: {messages}")
+        logger.debug(f"Async masking request: {messages}")
             
         completion = await self.async_client.chat.completions.create(
             model=self.config["llm_api"]["model"],
@@ -173,8 +166,7 @@ class PromptMask:
             temperature=0.0,
         )
         response_content = completion.choices[0].message.content
-        if self.verbose:
-            logger.debug(f"Async masking response: {response_content}")
+        logger.debug(f"Async masking response: {response_content}")
             
         mask_map = self._parse_mask_response(response_content)
         
