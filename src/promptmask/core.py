@@ -1,6 +1,7 @@
 # src/promptmask/core.py
 
 import json
+import string
 from typing import List, Dict, Tuple, AsyncGenerator, Generator
 from openai import OpenAI, AsyncOpenAI
 
@@ -41,15 +42,9 @@ class PromptMask:
     def _build_mask_prompt(self, text: str) -> List[Dict[str, str]]:
         """Constructs the full prompt for the local masking LLM."""
         cfg = self.config
-        sys_prompt = cfg["prompt"]["system_template"].format(
-            sensitive_include=cfg["sensitive"]["include"],
-            sensitive_exclude=cfg["sensitive"]["exclude"],
-            mask_left=cfg["mask_wrapper"]["left"],
-            mask_right=cfg["mask_wrapper"]["right"],
-        )
-        user_content = cfg["prompt"]["user_template"].format(text_to_mask=text)
+        user_content = string.Template(cfg["prompt"]["user_template"]).safe_substitute(text_to_mask=text)
         
-        messages = [{"role": "system", "content": sys_prompt}]
+        messages = [{"role": "system", "content": cfg["prompt"]["system_template"]}]
         messages.extend(cfg["prompt"]["examples"])
         messages.append({"role": "user", "content": user_content})
         
@@ -62,11 +57,11 @@ class PromptMask:
             print("json_str::",json_str)
             mask_map = json.loads(json_str)
             # Ensure 1:1 mapping by reversing the map to check for duplicate masks
-            reversed_map = {v: k for k, v in mask_map.items()}
+            reversed_map = {v: k for k, v in mask_map.items()} #raise TypeError if v is unhashable
             if len(reversed_map) != len(mask_map):
                 logger.warning("Duplicate masks detected in LLM response. The result might be inconsistent.")
             return mask_map
-        except (ValueError, json.JSONDecodeError) as e:
+        except (ValueError, json.JSONDecodeError, TypeError) as e:
             logger.error(f"Failed to parse mask response: {e}\nResponse: {response_content}")
             return {}
 
@@ -88,7 +83,7 @@ class PromptMask:
         )
         response_content = completion.choices[0].message.content
         if self.verbose:
-            logger.debug(f"Masking response from local LLM: {response_content}")
+            logger.debug(f"Masking response from local LLM {len(response_content)}: {response_content}")
 
         mask_map = self._parse_mask_response(response_content)
         
