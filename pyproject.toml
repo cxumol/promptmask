@@ -35,6 +35,7 @@ api = [
 ]
 dev = [
     "ruff",
+    "tqdm",
     "icecream",
     "pytest",
     "pytest-asyncio"
