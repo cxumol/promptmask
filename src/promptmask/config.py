@@ -58,18 +58,21 @@ def load_config(config_override = {}, config_file: str = "") -> dict:
     config["llm_api"]["key"] = os.getenv("LOCALAI_API_KEY", config["llm_api"]["key"])
 
     # Apply mask_wrapper
-    config["prompt"]["system_template"] = string.Template(cfg["prompt"]["system_template"]).safe_substitute(
-            sensitive_include=cfg["sensitive"]["include"],
-            sensitive_exclude=cfg["sensitive"]["exclude"],
-            mask_left=cfg["mask_wrapper"]["left"],
-            mask_right=cfg["mask_wrapper"]["right"],
+    config["prompt"]["system_template"] = string.Template(config["prompt"]["system_template"]).safe_substitute(
+            sensitive_include=config["sensitive"]["include"],
+            sensitive_exclude=config["sensitive"]["exclude"],
+            mask_left=config["mask_wrapper"]["left"],
+            mask_right=config["mask_wrapper"]["right"],
         )
-    config["prompt"]["examples"] = string.Template(cfg["prompt"]["examples"]).safe_substitute(
-            mask_left=cfg["mask_wrapper"]["left"],
-            mask_right=cfg["mask_wrapper"]["right"], 
-        )
+    
+    config["prompt"]["examples"] = [{"role": ex["role"],
+            "content": string.Template(ex["content"]).safe_substitute(
+            mask_left=config["mask_wrapper"]["left"],
+            mask_right=config["mask_wrapper"]["right"], 
+        )} #if ex["role"] == "assistant" else ex
+        for ex in config["prompt"]["examples"]]
 
-    if self.verbose:
+    if _is_verbose(config):
         logger.setLevel("DEBUG")
     logger.debug(f"Final loaded config:\n{config}")
     
