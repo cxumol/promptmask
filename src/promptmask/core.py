@@ -6,7 +6,7 @@ from typing import List, Dict, Tuple, AsyncGenerator, Generator
 from openai import OpenAI, AsyncOpenAI
 
 from .config import load_config
-from .utils import _btwn, logger
+from .utils import _btwn, logger, is_dict_str_str
 
 class PromptMask:
     def __init__(self, config: dict = {}, config_file: str =  ""):
@@ -52,6 +52,8 @@ class PromptMask:
             json_str = _btwn(response_content, "{", "}")
             logger.debug("json_str::",json_str)
             mask_map = json.loads(json_str)
+            if not is_dict_str_str(mask_map):
+                raise TypeError("Mask map should be a dictionary mapping strings to strings.")
             # Ensure 1:1 mapping by reversing the map to check for duplicate masks
             reversed_map = {v: k for k, v in mask_map.items()} #raise TypeError if v is unhashable
             if len(reversed_map) != len(mask_map):
