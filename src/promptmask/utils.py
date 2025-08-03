@@ -29,3 +29,6 @@ def merge_configs(base, override):
         else:
             base[key] = value
     return base
+
+def is_dict_str_str(data: dict) -> bool:
+    return all(isinstance(key, str) and isinstance(value, str) for key, value in data.items())
