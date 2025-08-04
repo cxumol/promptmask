@@ -6,6 +6,7 @@
 base = "http://localhost:11434/v1"
 model = "" # If empty, will auto-detect first available model from /v1/models
 key = ""
+timeout = 10.0
 
 # Defines what data is considered sensitive.
 [sensitive]
