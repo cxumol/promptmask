@@ -14,7 +14,12 @@ prepare_pm = lambda model="": PromptMask(config={"llm_api":{"model":model},"gene
 CONFIG_PATH = "promptmask.config.batch.toml"
 
 def get_model_list():
-    url=tomllib.load(open(CONFIG_PATH,'rb'))['llm_api']['base']+'/models'
+    llm_cfg=tomllib.load(open(CONFIG_PATH,'rb'))['llm_api']
+    models=llm_cfg.get("models",None)
+    if models and len(models)>0:
+        if isinstance(models, list): return models
+        if isinstance(models, str): return models.split(',')
+    url=llm_cfg['base']+'/models'
     r = httpx.get(url).json()
     return [x['id'] for x in r['data']]
 
@@ -31,7 +36,6 @@ def main():
         pm = prepare_pm(model=model)
         with open(eval_result_path, 'a+') as f:
             for l in trange(eval_result_len,TOTAL_LINES):
-                ic(model, l)
                 masked_text, mask_map = pm.mask_str(src_txts[l])
                 json.dump({"masked_text":masked_text, "mask_map":mask_map},f)
                 f.write('\n')

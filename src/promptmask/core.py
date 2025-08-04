@@ -51,11 +51,11 @@ class PromptMask:
         try:
             json_str = _btwn(response_content, "{", "}")
             logger.debug("json_str::",json_str)
-            mask_map = json.loads(json_str)
-            if not is_dict_str_str(mask_map):
+            reversed_map = json.loads(json_str)
+            if not is_dict_str_str(reversed_map):
                 raise TypeError("Mask map should be a dictionary mapping strings to strings.")
             # Ensure 1:1 mapping by reversing the map to check for duplicate masks
-            reversed_map = {v: k for k, v in mask_map.items()} #raise TypeError if v is unhashable
+            mask_map = {v: k for k, v in reversed_map.items()} #raise TypeError if v is unhashable
             if len(reversed_map) != len(mask_map):
                 logger.warning("Duplicate masks detected in LLM response. The result might be inconsistent.")
             return mask_map

@@ -1,0 +1,4 @@
+model,recall,fnr,fp_rate,err_rate
+baidu_ernie-4.5-0.3b,17.37%,82.63%,75.20%,54.50%
+meta-llama_llama-3.2-1b-instruct,60.29%,39.71%,38.05%,24.50%
+google_gemma-3-1b-it,47.04%,52.96%,48.76%,33.00%
