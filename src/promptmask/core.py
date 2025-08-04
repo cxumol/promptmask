@@ -3,7 +3,7 @@
 import json
 import string
 from typing import List, Dict, Tuple, AsyncGenerator, Generator
-from openai import OpenAI, AsyncOpenAI
+from openai import OpenAI, AsyncOpenAI, APITimeoutError
 
 from .config import load_config
 from .utils import _btwn, logger, is_dict_str_str
@@ -61,7 +61,19 @@ class PromptMask:
             return mask_map
         except (ValueError, json.JSONDecodeError, TypeError) as e:
             logger.error(f"Failed to parse mask response: {e}\nResponse: {response_content}")
-            return {}
+            return {"err":type(e).__name__}
+
+    def _oai_chat_comp(self, messages:str) -> str:
+        try:
+            completion = self.client.chat.completions.create(
+            model=self.config["llm_api"]["model"],
+            messages=messages,
+            temperature=0.0,
+            timeout=self.config["llm_api"]["timeout"],
+        )
+            return completion.choices[0].message.content
+        except APITimeoutError as e:
+            return f'{"err":"{type(e).__name__}"}'
 
     # --- Synchronous Methods ---
 
@@ -73,12 +85,7 @@ class PromptMask:
         messages = self._build_mask_prompt(text)
         logger.debug(f"Message sending to local LLM: {messages}")
 
-        completion = self.client.chat.completions.create(
-            model=self.config["llm_api"]["model"],
-            messages=messages,
-            temperature=0.0,
-        )
-        response_content = completion.choices[0].message.content
+        response_content = self._oai_chat_comp(messages)
         logger.debug(f"Mask mapping by local LLM (length: {len(response_content)}): {response_content}")
 
         mask_map = self._parse_mask_response(response_content)
@@ -162,12 +169,7 @@ class PromptMask:
         messages = self._build_mask_prompt(text)
         logger.debug(f"Async masking request: {messages}")
             
-        completion = await self.async_client.chat.completions.create(
-            model=self.config["llm_api"]["model"],
-            messages=messages,
-            temperature=0.0,
-        )
-        response_content = completion.choices[0].message.content
+        response_content = self._oai_chat_comp(messages)
         logger.debug(f"Async masking response: {response_content}")
             
         mask_map = self._parse_mask_response(response_content)
