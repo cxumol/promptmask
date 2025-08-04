@@ -73,7 +73,7 @@ class PromptMask:
         )
             return completion.choices[0].message.content
         except APITimeoutError as e:
-            return f'{"err":"{type(e).__name__}"}'
+            return str({"err":type(e).__name__})
 
     # --- Synchronous Methods ---
 
