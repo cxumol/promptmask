@@ -58,7 +58,16 @@ class PromptMask:
             mask_map = {v: k for k, v in reversed_map.items()} #raise TypeError if v is unhashable
             if len(reversed_map) != len(mask_map):
                 logger.warning("Duplicate masks detected in LLM response. The result might be inconsistent.")
-            return mask_map
+            
+            #wrap mask w/ self.config["mask_wrapper"]
+            mask_wrapper = self.config.get("mask_wrapper", {})
+            mask_left, mask_left = mask_wrapper.get("left", ""), mask_wrapper.get("right", "")
+            wrapped_mask_map = {
+                original_value: f"{mask_left}{mask_key.upper()}{mask_left}"
+                for original_value, mask_key in mask_map.items()
+            }
+            
+            return wrapped_mask_map
         except (ValueError, json.JSONDecodeError, TypeError) as e:
             logger.error(f"Failed to parse mask response: {e}\nResponse: {response_content}")
             return {"err":type(e).__name__}

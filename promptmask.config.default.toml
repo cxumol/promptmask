@@ -29,17 +29,23 @@ Make sure mask mappings are unique and non-overlapping.
 Config:
 - Sensitive: ${sensitive_include}
 - Non-Sensitive: ${sensitive_exclude}
-- Mask Format: ${mask_left}UPPER_SNAKE_CASE${mask_right}
+- Mask Key Format: UPPER_SNAKE_CASE
 
-The output MUST strictly adhere to the following format, and NO other text MUST be included. If no sensitive data is found, respond with an empty JSON object: `{}`.
-<mask_mapping>{"${mask_left}USER_EMAIL_1${mask_right}":"test@example.com","${mask_left}USER_PASSWORD_1${mask_right}":"P@ssword123!"}</mask_mapping>"""
+The output MUST strictly adhere to the following format:
+1. It MUST be a single, flat JSON object.
+2. Both keys and values MUST be strings.
+3. If no sensitive data is found, respond with an empty JSON object: `{}`.
+4. DO NOT include any other text or explanations.
+
+Example of a valid response:
+<mask_mapping>{"USER_EMAIL_1":"test@example.com","USER_PASSWORD_1":"P@ssword123!"}</mask_mapping>"""
 
 user_template = "<user_input_text>\n${text_to_mask}\n</user_input_text>"
 
 # Few-shot examples to improve local LLM accuracy.
 examples = [
-    { role = "user", content = "<user_input_text>\nMy name is johndoe, my account ID is 123456789, and my credit card number is 1234-5678-9012-3456.\n</user_input_text>" },
-    { role = "assistant", content = "<mask_mapping>{\"${mask_left}USER_NAME_1${mask_right}\":\"johndoe\",\"${mask_left}ACCOUNT_ID_1${mask_right}\":\"123456789\",\"${mask_left}CREDIT_CARD_NUMBER_1${mask_right}\":\"1234-5678-9012-3456\"}</mask_mapping>" },
+    { role = "user", content = "<user_input_text>\nMy account ID is 123456789, and my credit card number is 1234-5678-9012-3456. Another credit card number is 3456-1234-4567-4321.\n</user_input_text>" },
+    { role = "assistant", content = "<mask_mapping>{\"ACCOUNT_ID_1\":\"123456789\",\"CREDIT_CARD_NUMBER_1\":\"1234-5678-9012-3456\",\"CREDIT_CARD_NUMBER_2\":\"3456-1234-4567-4321\"}</mask_mapping>" },
     { role = "user", content = """<user_input_text>
 {
   "user":{
@@ -50,14 +56,14 @@ examples = [
   "ip_address": "203.0.113.75"
 }
 </user_input_text>""" },
-    { role = "assistant", content = "<mask_mapping>{\"${mask_left}USER_NAME_1${mask_right}\":\"John Smith\",\"${mask_left}USER_EMAIL_1${mask_right}\":\"smith.j@example.com\",\"${mask_left}AUTH_TOKEN_1${mask_right}\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\",\"${mask_left}IP_ADDRESS_1${mask_right}\":\"203.0.113.75\"}</mask_mapping>" },
+    { role = "assistant", content = "<mask_mapping>{\"USER_NAME_1\":\"John Smith\",\"USER_EMAIL_1\":\"smith.j@example.com\",\"AUTH_TOKEN_1\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\",\"IP_ADDRESS_1\":\"203.0.113.75\"}</mask_mapping>" },
     { role = "user", content = """<user_input_text>
 import os,requests
 API_KEY = "key-a1b2c3d4e5f6g7h8i9j0"
 DB_CONNECTION_STRING = "postgres://admin:db_pass_123!@db.internal.net:5432/production"
 data = requests.get('https://api.service.com/v1/data', headers={'Authorization': f'Bearer {API_KEY}'}).json()
 </user_input_text>""" },
-    { role = "assistant", content = "<mask_mapping>{\"${mask_left}API_KEY_1${mask_right}\":\"key-a1b2c3d4e5f6g7h8i9j0\",\"${mask_left}DB_CONNECTION_STRING_1${mask_right}\":\"postgres://admin:db_pass_123!@db.internal.net:5432/production\"}</mask_mapping>" }
+    { role = "assistant", content = "<mask_mapping>{\"API_KEY_1\":\"key-a1b2c3d4e5f6g7h8i9j0\",\"DB_CONNECTION_STRING_1\":\"postgres://admin:db_pass_123!@db.internal.net:5432/production\"}</mask_mapping>" }
 ]
 
 # General settings
