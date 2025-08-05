@@ -11,17 +11,17 @@ class OpenAIMasked(OpenAI):
     An OpenAI client that automatically masks and unmasks sensitive data.
     It inherits from openai.OpenAI and overrides the chat.completions.create method.
     """
-    def __init__(self, *args, promtmask_config: dict = None, **kwargs):
+    def __init__(self, *args, promptmask_config: dict = None, **kwargs):
         """
         Initializes the masked client.
         
         Args:
             *args: Positional arguments for openai.OpenAI client.
-            promtmask_config (dict, optional): Configuration for PromptMask.
+            promptmask_config (dict, optional): Configuration for PromptMask.
             **kwargs: Keyword arguments for openai.OpenAI client.
         """
         super().__init__(*args, **kwargs)
-        self._promptmask = PromptMask(config=promtmask_config)
+        self._promptmask = PromptMask(config=promptmask_config)
         self._hijack_chat_completions()
 
     def _hijack_chat_completions(self):
