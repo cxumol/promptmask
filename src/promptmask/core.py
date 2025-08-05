@@ -140,7 +140,7 @@ class PromptMask:
     def mask_messages(self, messages: List[Dict[str, str]]) -> Tuple[List[Dict[str, str]], Dict[str, str]]:
         """Masks 'content' in a list of chat messages."""
         # We only mask 'user' and 'assistant' roles to avoid corrupting system prompts.
-        text_to_mask = "\n".join([m["content"] for m in messages if m.get("role") in ["user", "assistant"] and m.get("content")])
+        text_to_mask = "\n".join([m["content"] for m in messages if m.get("role") not in ["system"] and m.get("content")])
         
         if not text_to_mask.strip():
             return messages, {}
@@ -150,7 +150,7 @@ class PromptMask:
         masked_messages = []
         for msg in messages:
             new_msg = msg.copy()
-            if new_msg.get("content") and new_msg.get("role") in ["user", "assistant"]:
+            if new_msg.get("content") and new_msg.get("role") not in ["system"]:
                 content = new_msg["content"]
                 for original, mask in mask_map.items():
                     content = content.replace(original, mask)
@@ -223,7 +223,7 @@ class PromptMask:
 
     async def async_mask_messages(self, messages: List[Dict[str, str]]) -> Tuple[List[Dict[str, str]], Dict[str, str]]:
         """Async version of mask_messages."""
-        text_to_mask = "\n".join([m["content"] for m in messages if m.get("role") in ["user", "assistant"] and m.get("content")])
+        text_to_mask = "\n".join([m["content"] for m in messages if m.get("role") not in ["system"] and m.get("content")])
         
         if not text_to_mask.strip():
             return messages, {}
@@ -233,7 +233,7 @@ class PromptMask:
         masked_messages = []
         for msg in messages:
             new_msg = msg.copy()
-            if new_msg.get("content") and new_msg.get("role") in ["user", "assistant"]:
+            if new_msg.get("content") and new_msg.get("role") not in ["system"]:
                 content = new_msg["content"]
                 for original, mask in mask_map.items():
                     content = content.replace(original, mask)
