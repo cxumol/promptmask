@@ -47,3 +47,6 @@ promptmask-web = "promptmask.web.main:run_server"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+promptmask = ["*.toml"]

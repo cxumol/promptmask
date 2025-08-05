@@ -5,8 +5,11 @@ import string
 from pathlib import Path
 from .utils import tomllib, merge_configs, logger
 
+import importlib.resources as pkg_resources
+
 DEFAULT_CONFIG_FILENAME = "promptmask.config.default.toml"
 USER_CONFIG_FILENAME = "promptmask.config.user.toml"
+PKG_NAME = "promptmask"
 
 _is_verbose  = lambda config:config.get("general", {}).get("verbose")
 
@@ -19,12 +22,17 @@ def load_config(config_override = {}, config_file: str = "") -> dict:
     3. User-specific config file (`promptmask.config.user.toml`).
     4. Default config file packaged with the library.
     """
-    # 4. Load default config
-    default_config_path = Path(__file__).parent / DEFAULT_CONFIG_FILENAME
-    with open(default_config_path, "rb") as f:
-        config = tomllib.load(f)
-        if _is_verbose(config):
-            logger.info(f"Loaded default config from {default_config_path}")
+    # priority 4
+    # default_config_path = Path(__file__).parent / DEFAULT_CONFIG_FILENAME
+    try: #py3.9+
+        config_path = pkg_resources.files(PKG_NAME).joinpath(DEFAULT_CONFIG_FILENAME)
+        config_text = config_path.read_text(encoding='utf-8')
+    except AttributeError: #py38
+        with pkg_resources.open_text(PKG_NAME, DEFAULT_CONFIG_FILENAME, encoding='utf-8') as f:
+            config_text = f.read()
+    config = tomllib.loads(config_text)
+    if _is_verbose(config):
+        logger.info(f"Loaded default config from {default_config_path}")
 
     # 3. Load user config if it exists
     user_config_path = Path.cwd() / USER_CONFIG_FILENAME
