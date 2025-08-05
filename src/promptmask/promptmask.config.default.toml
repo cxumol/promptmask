@@ -12,9 +12,9 @@ timeout = 15.0
 [sensitive]
 # A natural language description of data categories to mask.
 # This will be injected into the system prompt for the local LLM.
-include = "passwords, social security numbers, any kind of user ID, API Keys, private keys, credit card numbers, phone numbers, physical addresses"
+include = "passwords, social security numbers, any kind of user ID, API Keys, private keys, credit card numbers, phone numbers, IP addresses, and everthing generally considered as privacy."
 # A natural language description of data categories to explicitly ignore.
-exclude = "company names, product names, brand names, general technical terms"
+exclude = "company names, product names, brand names, general terms, and everthing else."
 
 # Defines the mask format.
 [mask_wrapper]
