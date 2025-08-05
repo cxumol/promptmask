@@ -82,7 +82,7 @@ class PromptMask:
             
             #wrap mask w/ self.config["mask_wrapper"]
             mask_wrapper = self.config.get("mask_wrapper", {})
-            mask_left, mask_left = mask_wrapper.get("left", ""), mask_wrapper.get("right", "")
+            mask_left, mask_right = mask_wrapper.get("left", ""), mask_wrapper.get("right", "")
             wrapped_mask_map = {
                 original_value: f"{mask_left}{mask_key.upper()}{mask_left}"
                 for original_value, mask_key in mask_map.items()
