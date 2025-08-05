@@ -9,10 +9,9 @@ from tqdm import trange
 
 from util import tomllib, mkdirp, prepare_dataset, fpath_sanitize, TOTAL_LINES, RAW_RESULT_DIR, DATASET_DIR
 
-prepare_pm = lambda model="": PromptMask(config={"llm_api":{"model":model},"general":{"verbose":False}})
-
 CONFIG_PATH = "promptmask.config.batch.toml"
 
+prepare_pm = lambda model="": PromptMask(config={"llm_api":{"model":model}}, config_file=CONFIG_PATH)
 def get_model_list():
     llm_cfg=tomllib.load(open(CONFIG_PATH,'rb'))['llm_api']
     models=llm_cfg.get("models",None)
