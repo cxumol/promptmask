@@ -48,12 +48,13 @@ async def set_config(config: dict):
         with open(user_config_path, "wb") as f:
             tomli_w.dump(config, f)
         
-        logger.info(f"User config saved to {user_config_path}. Please __restart__ the server to apply changes.")
-        return {"status": "ok", "message": f"Configuration saved to {user_config_path}. Restart the server to apply."}
-    except ImportError:
-        raise HTTPException(status_code=500, detail="Please install 'tomli-w' to use this endpoint.")
+        logger.info(f"User config saved to {user_config_path}. Triggering hot reload...")
+        await prompt_masker.reload_config()
+        
+        return {"status": "ok", "message": "Configuration saved and reloaded successfully. The new settings are now active."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to write config: {e}")
+        logger.error(f"Failed to write or reload config: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to write or reload config: {e}")
 
 @app.post("/v1/mask", response_model=MaskResponse, tags=["Masking"])
 async def mask_text(request: MaskRequest):
