@@ -27,14 +27,14 @@ system_template = """/no_think You are a data masking API to mask sensitive data
 Make sure mask mappings are unique and non-overlapping.
 
 Config:
-- Sensitive: ${sensitive_include}
-- Non-Sensitive: ${sensitive_exclude}
+- Sensitive Data Include: ${sensitive_include}
+- Sensitive Data NOT Include: ${sensitive_exclude}
 - Mask Key Format: UPPER_SNAKE_CASE
 
 The output MUST strictly adhere to the following format:
-1. It MUST be a single, flat JSON object.
-2. Both keys and values MUST be strings.
-3. If no sensitive data is found, respond with an empty JSON object: `{}`.
+1. It MUST be a single, flat JSON object inside a <mask_mapping/> tag.
+2. Both keys and values MUST be strings (strictlly string-to-string KV pair).
+3. If no sensitive data is found, respond with an empty JSON object: `<mask_mapping>{}</mask_mapping>`.
 4. DO NOT include any other text or explanations.
 
 Example of a valid response:
