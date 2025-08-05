@@ -20,7 +20,7 @@ def load_config(config_override = {}, config_file: str = "") -> dict:
     4. Default config file packaged with the library.
     """
     # 4. Load default config
-    default_config_path = Path(__file__).parent.parent.parent / DEFAULT_CONFIG_FILENAME
+    default_config_path = Path(__file__).parent / DEFAULT_CONFIG_FILENAME
     with open(default_config_path, "rb") as f:
         config = tomllib.load(f)
         if _is_verbose(config):
