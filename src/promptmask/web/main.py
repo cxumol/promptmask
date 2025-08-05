@@ -1,4 +1,4 @@
-# src/promptmask/api/main.py
+# src/promptmask/web/main.py
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
@@ -14,8 +14,8 @@ from ..config import USER_CONFIG_FILENAME
 from ..utils import tomllib, logger
 
 app = FastAPI(
-    title="PromptMask API",
-    description="An API for masking and unmasking sensitive data in text and chat messages.",
+    title="PromptMask Web API",
+    description="A Web API for masking and unmasking sensitive data in text and chat messages.",
 )
 
 # Use a single PromptMask instance for the API
@@ -23,7 +23,7 @@ prompt_masker = PromptMask()
 
 @app.get("/v1/health", tags=["General"])
 async def health_check():
-    """Check if the API is running."""
+    """Check if the Web API is running."""
     return {"status": "ok"}
 
 @app.get("/v1/config", tags=["Configuration"])
@@ -36,7 +36,7 @@ async def set_config(config: dict):
     """
     Update the user configuration and persist it.
     This will create/overwrite 'promptmask.config.user.toml' in the current directory.
-    The API server needs to be restarted to apply the new configuration.
+    The Web API server needs to be restarted to apply the new configuration.
     """
     user_config_path = Path.cwd() / USER_CONFIG_FILENAME
     try:
@@ -48,7 +48,7 @@ async def set_config(config: dict):
         with open(user_config_path, "wb") as f:
             tomli_w.dump(config, f)
         
-        logger.info(f"User config saved to {user_config_path}. Please restart the server to apply changes.")
+        logger.info(f"User config saved to {user_config_path}. Please __restart__ the server to apply changes.")
         return {"status": "ok", "message": f"Configuration saved to {user_config_path}. Restart the server to apply."}
     except ImportError:
         raise HTTPException(status_code=500, detail="Please install 'tomli-w' to use this endpoint.")

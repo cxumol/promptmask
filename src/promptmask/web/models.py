@@ -1,4 +1,4 @@
-# src/promptmask/api/models.py
+# src/promptmask/web/models.py
 
 from pydantic import BaseModel
 from typing import List, Dict, Any
