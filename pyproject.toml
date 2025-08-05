@@ -30,6 +30,7 @@ Issues = "https://github.com/cxumol/promptmask/issues"
 
 [project.optional-dependencies]
 web = [
+    "tomli-w",
     "fastapi>=0.100",
     "uvicorn[standard]>=0.20",
 ]
