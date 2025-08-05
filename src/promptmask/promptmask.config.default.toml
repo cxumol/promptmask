@@ -29,6 +29,7 @@ Make sure mask mappings are unique and non-overlapping.
 Config:
 - Sensitive Data Include: ${sensitive_include}
 - Sensitive Data NOT Include: ${sensitive_exclude}
+- Granularity: word,phrase
 - Mask Key Format: UPPER_SNAKE_CASE
 
 The output MUST strictly adhere to the following format:
