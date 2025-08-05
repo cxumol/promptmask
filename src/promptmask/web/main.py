@@ -2,6 +2,8 @@
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
+import httpx
+
 from contextlib import asynccontextmanager
 from pathlib import Path
 import json
