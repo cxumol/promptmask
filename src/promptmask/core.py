@@ -2,6 +2,7 @@
 
 import json
 import string
+import asyncio
 from typing import List, Dict, Tuple, AsyncGenerator, Generator
 from openai import OpenAI, AsyncOpenAI, APITimeoutError
 
@@ -17,10 +18,21 @@ class PromptMask:
             config (dict, optional): A dictionary to override default settings.
             config_file (str, optional): Path to a custom TOML config file.
         """
-        self.config = load_config(config, config_file)
+        self._init_config_override = config
+        self._init_config_file = config_file
+        self._lock = asyncio.Lock() # 添加一个锁来处理并发重载请求
+        self._initialize_clients()
+
+    def _initialize_clients(self):
+        """
+        Loads configuration and initializes API clients.
+        This method can be called to re-initialize the instance.
+        """
+        logger.info("Initializing or reloading PromptMask configuration...")
+        self.config = load_config(self._init_config_override, self._init_config_file)
         
-        self.client = OpenAI(base_url=self.config["llm_api"]["base"], api_key=self.config["llm_api"]["key"])
-        self.async_client = AsyncOpenAI(base_url=self.config["llm_api"]["base"], api_key=self.config["llm_api"]["key"])
+        self.client = OpenAI(base_url=self.config["llm_api"]["base"], api_key=self.config["llm_api"]["key"], timeout=self.config["llm_api"]["timeout"])
+        self.async_client = AsyncOpenAI(base_url=self.config["llm_api"]["base"], api_key=self.config["llm_api"]["key"], timeout=self.config["llm_api"]["timeout"])
 
         # Auto-detect model if not specified
         if not self.config["llm_api"].get("model"):
@@ -28,13 +40,27 @@ class PromptMask:
                 models = self.client.models.list()
                 if models.data:
                     self.config["llm_api"]["model"] = models.data[0].id
-                    logger.debug(f"Auto-selected local model: {self.config['llm_api']['model']}")
+                    logger.info(f"Auto-selected local model: {self.config['llm_api']['model']}")
                 else:
                     raise ValueError("No models found at the local LLM API endpoint.")
             except Exception as e:
                 logger.error(f"Failed to auto-detect a model from {self.config['llm_api']['base']}. Please specify a model in your config. Error: {e}")
                 raise
+        logger.info("PromptMask configuration loaded successfully.")
 
+    async def reload_config(self):
+        """
+        Asynchronously reloads the configuration from the disk and re-initializes clients.
+        This makes configuration changes effective without restarting the server.
+        """
+        async with self._lock:
+            # 在一个单独的线程中运行同步的初始化代码，以避免阻塞事件循环
+            # 这是一种好的实践，特别是如果 _initialize_clients 包含阻塞IO操作
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(
+                None, self._initialize_clients
+            )
+        logger.info("Configuration reloaded successfully.")
     def _build_mask_prompt(self, text: str) -> List[Dict[str, str]]:
         """Constructs the full prompt for the local masking LLM."""
         cfg = self.config
@@ -75,11 +101,22 @@ class PromptMask:
     def _oai_chat_comp(self, messages:str) -> str:
         try:
             completion = self.client.chat.completions.create(
-            model=self.config["llm_api"]["model"],
-            messages=messages,
-            temperature=0.0,
-            timeout=self.config["llm_api"]["timeout"],
+                model=self.config["llm_api"]["model"],
+                messages=messages,
+                temperature=0.0
         )
+            return completion.choices[0].message.content
+        except APITimeoutError as e:
+            return str({"err":type(e).__name__})
+
+    async def _async_oai_chat_comp(self, messages: List[Dict[str, str]]) -> str:
+        """Asynchronous chat completion call."""
+        try:
+            completion = await self.async_client.chat.completions.create(
+                model=self.config["llm_api"]["model"],
+                messages=messages,
+                temperature=0.0,
+            )
             return completion.choices[0].message.content
         except APITimeoutError as e:
             return str({"err":type(e).__name__})
@@ -178,9 +215,9 @@ class PromptMask:
         messages = self._build_mask_prompt(text)
         logger.debug(f"Async masking request: {messages}")
             
-        response_content = self._oai_chat_comp(messages)
+        response_content = await self._async_oai_chat_comp(messages)
         logger.debug(f"Async masking response: {response_content}")
-            
+
         mask_map = self._parse_mask_response(response_content)
         
         masked_text = text
