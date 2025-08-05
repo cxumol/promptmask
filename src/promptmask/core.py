@@ -38,11 +38,10 @@ class PromptMask:
         if not self.config["llm_api"].get("model"):
             try:
                 models = self.client.models.list()
-                if models.data:
-                    self.config["llm_api"]["model"] = models.data[0].id
-                    logger.info(f"Auto-selected local model: {self.config['llm_api']['model']}")
-                else:
+                if not models.data:
                     raise ValueError("No models found at the local LLM API endpoint.")
+                self.config["llm_api"]["model"] = models.data[0].id
+                logger.info(f"Auto-selected local model: {self.config['llm_api']['model']}")
             except Exception as e:
                 logger.error(f"Failed to auto-detect a model from {self.config['llm_api']['base']}. Please specify a model in your config. Error: {e}")
                 raise
@@ -54,12 +53,8 @@ class PromptMask:
         This makes configuration changes effective without restarting the server.
         """
         async with self._lock:
-            # 在一个单独的线程中运行同步的初始化代码，以避免阻塞事件循环
-            # 这是一种好的实践，特别是如果 _initialize_clients 包含阻塞IO操作
             loop = asyncio.get_running_loop()
-            await loop.run_in_executor(
-                None, self._initialize_clients
-            )
+            await loop.run_in_executor(None, self._initialize_clients)
         logger.info("Configuration reloaded successfully.")
     def _build_mask_prompt(self, text: str) -> List[Dict[str, str]]:
         """Constructs the full prompt for the local masking LLM."""
