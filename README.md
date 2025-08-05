@@ -19,7 +19,7 @@ pip install promptmask
 For the optional web API server:
 
 ```bash
-pip install "promptmask[api]"
+pip install "promptmask[web]"
 ```
 
 ## Quickstart: `OpenAIMasked` Adapter
@@ -69,12 +69,12 @@ print(response.choices[0].message.content)
 
 Copy `promptmask.config.default.toml` and modify it to your needs. For example, you can change the local LLM endpoint or tweak the system prompt for better masking performance.
 
-## Standalone API Server
+## Web API Server
 
-If you installed the `api` extras, you can run a standalone server:
+If you installed the `web` extras, you can run:
 
 ```bash
-promptmask-api
+promptmask-web
 ```
 
 The server will be available at `http://localhost:8000`. Check out the interactive documentation at `http://localhost:8000/docs`.

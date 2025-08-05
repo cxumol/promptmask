@@ -29,7 +29,7 @@ Homepage = "https://github.com/cxumol/promptmask"
 Issues = "https://github.com/cxumol/promptmask/issues"
 
 [project.optional-dependencies]
-api = [
+web = [
     "fastapi>=0.100",
     "uvicorn[standard]>=0.20",
 ]
@@ -42,7 +42,7 @@ dev = [
 ]
 
 [project.scripts]
-promptmask-api = "promptmask.api.main:run_server"
+promptmask-web = "promptmask.web.main:run_server"
 
 [tool.setuptools.packages.find]
 where = ["src"]
