@@ -76,7 +76,7 @@ class PromptMask:
             if not is_dict_str_str(reversed_map):
                 raise TypeError("Mask map should be a dictionary mapping strings to strings.")
             # Ensure 1:1 mapping by reversing the map to check for duplicate masks
-            mask_map = {v: k for k, v in reversed_map.items() if len(v)>0} #raise TypeError if v is unhashable
+            mask_map = {v: k for k, v in reversed_map.items() if len(v)>3} #raise TypeError if v is unhashable
             if len(reversed_map) != len(mask_map):
                 logger.warning("Duplicate masks detected in LLM response. The result might be inconsistent.")
             
