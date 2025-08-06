@@ -76,7 +76,7 @@ class PromptMask:
             if not is_dict_str_str(reversed_map):
                 raise TypeError("Mask map should be a dictionary mapping strings to strings.")
             # Ensure 1:1 mapping by reversing the map to check for duplicate masks
-            mask_map = {v: k for k, v in reversed_map.items()} #raise TypeError if v is unhashable
+            mask_map = {v: k for k, v in reversed_map.items() if len(v)>0} #raise TypeError if v is unhashable
             if len(reversed_map) != len(mask_map):
                 logger.warning("Duplicate masks detected in LLM response. The result might be inconsistent.")
             
@@ -84,7 +84,7 @@ class PromptMask:
             mask_wrapper = self.config.get("mask_wrapper", {})
             mask_left, mask_right = mask_wrapper.get("left", ""), mask_wrapper.get("right", "")
             wrapped_mask_map = {
-                original_value: f"{mask_left}{mask_key.upper()}{mask_left}"
+                original_value: f"{mask_left}{mask_key.upper()}{mask_right}"
                 for original_value, mask_key in mask_map.items()
             }
             
@@ -187,9 +187,6 @@ class PromptMask:
             content = chunk.choices[0].delta.content or ""
             buffer += content
             
-            # Simple, non-overlapping unmasking
-            # A more robust solution might use regex with word boundaries
-            # but this is a good start.
             unmasked_chunk = buffer
             for mask, original in inverted_map.items():
                 unmasked_chunk = unmasked_chunk.replace(mask, original)
