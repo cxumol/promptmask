@@ -7,7 +7,7 @@ import httpx
 from icecream import ic
 from tqdm import trange
 
-from util import tomllib, mkdirp, prepare_dataset, fpath_sanitize, TOTAL_LINES, RAW_RESULT_DIR, DATASET_DIR
+from util import tomllib, mkdirp, prepare_dataset, fpath_sanitize, fn_timer, TOTAL_LINES, RAW_RESULT_DIR, DATASET_DIR
 
 CONFIG_PATH = "promptmask.config.batch.toml"
 
@@ -22,6 +22,7 @@ def get_model_list():
     r = httpx.get(url).json()
     return [x['id'] for x in r['data']]
 
+@fn_timer
 def main():
     src_txts = prepare_dataset()
     models: [str] = get_model_list()

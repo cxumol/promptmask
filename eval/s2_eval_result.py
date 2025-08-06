@@ -6,11 +6,13 @@ from typing import List,Dict
 
 from util import tomllib, mkdirp, load_dataset_masks, TOTAL_LINES, RAW_RESULT_DIR, DATASET_DIR
 
+from icecream import ic
+
 # DEBUG_RESULT_DIR = "data/debug_result"
 
 def load_result_masks(fpath):
     with open(fpath) as f:
-        return [list(json.loads(l).get("mask_map", {}).keys()) for l in f]
+        return [list(json.loads(l, strict=False).get("mask_map", {}).keys()) for l in f] # .read().splitlines()
 
 def main():
     eval_data = []
@@ -39,7 +41,7 @@ def main():
         valid_lines = num_lines
         for i in range(num_lines):
             gt,pred = set(dataset_masks[i]),set(result_masks[i])
-            if not pred or tuple(pred)==("err",):
+            if tuple(pred)==("err",):
                 valid_lines-=1
                 continue
             _tp = gt.intersection(pred) # correct
