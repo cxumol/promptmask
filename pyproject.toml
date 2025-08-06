@@ -50,3 +50,4 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 promptmask = ["*.toml"]
+"promptmask.web" = ["static/*"]

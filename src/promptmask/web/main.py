@@ -2,11 +2,14 @@
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse
 import httpx
 
 from contextlib import asynccontextmanager
 from pathlib import Path
 import json
+
+import importlib.resources as pkg_resources
 
 from ..core import PromptMask
 from .models import (
@@ -37,6 +40,24 @@ app = FastAPI(
 )
 app.include_router(gateway_router)
 
+@app.get("/", response_class=FileResponse, include_in_schema=False)
+async def serve_index():
+    """
+    Serves the main index.html file for the WebUI.
+    This method is compatible with both standard and zipped package installations.
+    """
+    try:
+        return FileResponse(pkg_resources.files('promptmask.web').joinpath('static/index.html'))
+    except AttributeError: #py38
+        with pkg_resources.path('promptmask.web.static', 'index.html') as html_path:
+            return FileResponse(html_path)
+
+    except (ModuleNotFoundError, FileNotFoundError):
+        logger.error("WebUI file 'index.html' not found within the package.", exc_info=True)
+        raise HTTPException(
+            status_code=404, 
+            detail="WebUI file (index.html) not found. Ensure the package was installed correctly."
+        )
 
 @app.get("/v1/health", tags=["General"])
 async def health_check():

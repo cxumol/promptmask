@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptMask WebUI</title>
+    <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+    <style>
+        :root { --color-accent: #007bff; --font-size: 1.1rem; }
+        body { max-width: 1200px; margin: auto; padding: 1rem; }
+        nav a { text-decoration: none; }
+        nav a.active { font-weight: bold; text-decoration: underline; }
+        section { display: none; }
+        section.active { display: block; }
+        article { display: flex; flex-direction: column; gap: 1rem; }
+        textarea { height: 180px; resize: vertical; font-family: monospace; font-size: 0.9em; }
+        pre { background-color: #f0f0f0; padding: 1rem; border-radius: 4px; white-space: pre-wrap; word-break: break-all; margin: 0; }
+        button { width: 100%; }
+        summary { cursor: pointer; font-weight: bold; }
+        #gatewayStreamOutput { min-height: 100px; border: 1px solid var(--color-border); }
+
+        /* New Tab-based Layout Styles */
+        main > section {
+            display: none;
+            padding-top: 1rem;
+            border-top: 1px solid var(--color-border);
+        }
+        main > section.active { display: block; }
+        
+        /* New Chat Interface Styles */
+        chat-interface { display: block; border: 1px solid var(--color-border); padding: 1rem; border-radius: 4px; }
+        .chat-controls { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; }
+        .chat-controls button { width: auto; }
+        .chat-controls label { margin: 0; }
+        .chat-message-row { display: flex; gap: 0.5rem; align-items: flex-start; margin-bottom: 0.5rem; }
+        .chat-message-row select { flex: 0 0 100px; }
+        .chat-message-row textarea { flex: 1 1 auto; height: 80px; margin: 0; }
+        .chat-message-row button.remove-message { flex: 0 0 auto; width: 40px; padding: 0.5rem 0; background-color: var(--color-accent-background); border-color: var(--color-accent); color: var(--color-accent); line-height: 1; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>PromptMask WebUI</h1>
+        <nav>
+            <ul>
+                <li><a href="#texts" class="active" onclick="showPage('page-texts', this)">Mask/Unmask Texts</a></li>
+                <li><a href="#chat" onclick="showPage('page-chat', this)">Mask/Unmask Chat</a></li>
+                <li><a href="#gateway" onclick="showPage('page-gateway', this)">Gateway</a></li>
+                <li><a href="#settings" onclick="showPage('page-settings', this)">Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- TEXTS PAGE -->
+        <section id="page-texts" class="active">
+            <article>
+                <form onsubmit="event.preventDefault(); maskText()">
+                    <label for="textInput">Original Text</label>
+                    <textarea id="textInput" placeholder="e.g., My name is John Doe and my phone is 123-456-7890."></textarea>
+                    <button type="submit">Mask →</button>
+                </form>
+                <label for="maskedTextOutput">Masked Text</label>
+                <textarea id="maskedTextOutput" placeholder="Masked text will appear here..."></textarea>
+                <label for="maskMapOutput">Mask Map</label>
+                <pre><code id="maskMapOutput">{...}</code></pre>
+                <form onsubmit="event.preventDefault(); unmaskText()">
+                    <button type="submit">← Unmask</button>
+                </form>
+                <label for="unmaskedTextOutput">Unmasked Text</label>
+                <textarea id="unmaskedTextOutput" readonly placeholder="Unmasked result..."></textarea>
+            </article>
+        </section>
+
+        <!-- CHAT PAGE -->
+        <section id="page-chat">
+            <article>
+                 <form onsubmit="event.preventDefault(); maskMessages()">
+                    <label>Original Messages</label>
+                    <chat-interface id="chat-mask-editor" initial-messages='[{"role": "user", "content": "Hi, my name is Alice and I live at 123 Main St."}]'></chat-interface>
+                    <button type="submit">Mask →</button>
+                </form>
+                <label for="maskedMessagesOutput">Masked Messages (JSON)</label>
+                <textarea id="maskedMessagesOutput" placeholder="Masked messages will appear here..."></textarea>
+                <label for="chatMaskMapOutput">Mask Map</label>
+                <pre><code id="chatMaskMapOutput">{...}</code></pre>
+                <form onsubmit="event.preventDefault(); unmaskMessages()">
+                    <button type="submit">← Unmask</button>
+                </form>
+                <label for="unmaskedMessagesOutput">Unmasked Messages (JSON)</label>
+                <textarea id="unmaskedMessagesOutput" readonly placeholder="Unmasked messages result..."></textarea>
+            </article>
+        </section>
+
+        <!-- GATEWAY PAGE -->
+        <section id="page-gateway">
+            <article>
+                <h3>Gateway Status</h3>
+                <p>
+                    Health Check: <b id="healthStatus">UNKNOWN</b>
+                    <button onclick="checkHealth()" style="width:auto;display:inline-block;padding:0.5rem;vertical-align:middle;">Check Now</button>
+                </p>
+                <hr>
+                <h3>Gateway Live Test (Chat Completion Stream)</h3>
+                <form onsubmit="event.preventDefault(); testGatewayStream()">
+                    <label for="gatewayChatEditor">Messages</label>
+                    <chat-interface id="gatewayChatEditor" initial-messages='[{"role": "user", "content": "My name is Bob. Can you write a short story about an astronaut named Bob?"}]'></chat-interface>
+                    <button type="submit">Send Stream Request via Gateway</button>
+                </form>
+                <label for="gatewayStreamOutput">Live Unmasked Stream Output</label>
+                <pre id="gatewayStreamOutput"><code></code></pre>
+            </article>
+        </section>
+
+        <!-- SETTINGS PAGE -->
+        <section id="page-settings">
+             <article>
+                <h3>Configuration</h3>
+                <p>View and edit <code>promptmask.config.user.toml</code>. Changes are hot-reloaded on the server.</p>
+                <form onsubmit="event.preventDefault(); saveConfig()">
+                    <label for="configEditor">Config (JSON format for editing)</label>
+                    <textarea id="configEditor" style="height:400px;"></textarea>
+                    <button type="submit">Save & Reload Configuration</button>
+                </form>
+                <p>Status: <i id="configStatus"></i></p>
+             </article>
+        </section>
+    </main>
+
+    <footer><hr><p>PromptMask WebUI</p></footer>
+
+    <!-- Template for a single chat message row -->
+    <template id="chat-message-row-template">
+        <div class="chat-message-row">
+            <select class="role">
+                <option value="user">user</option>
+                <option value="assistant">assistant</option>
+                <option value="system">system</option>
+            </select>
+            <textarea class="content" placeholder="Message content..." rows="3"></textarea>
+            <button type="button" class="remove-message" title="Remove message">×</button>
+        </div>
+    </template>
+
+<script>
+// --- Utils (compact style) ---
+var $=id=>document.getElementById(id), $$=q=>document.querySelectorAll(q);
+var post=(url,d)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(r=>{if(!r.ok)return r.json().then(e=>Promise.reject(new Error(e.detail||`HTTP ${r.status}`)));return r.json()});
+var get=url=>fetch(url).then(r=>{if(!r.ok)return r.json().then(e=>Promise.reject(new Error(e.detail||`HTTP ${r.status}`)));return r.json()});
+var notify=(el,msg,isError)=>{el.textContent=msg;el.style.color=isError?'red':'green';};
+async function handleApi(action,resultHandler,errorHandler){try{var r=await action();resultHandler(r);}catch(e){errorHandler(e);console.error(e);}}
+
+
+// --- Chat Interface Web Component (Light DOM for mvp.css compatibility) ---
+customElements.define('chat-interface', class extends HTMLElement {
+    connectedCallback() {
+        var self = this; // 'this' context for event handlers
+        this.innerHTML = `
+            <div class="chat-controls">
+                <button type="button" class="add-message">Add Message</button>
+                <label>
+                    <input type="checkbox" class="toggle-system"> Optional First 'system' Message
+                </label>
+            </div>
+            <div class="messages-container"></div>
+        `;
+        this.messagesContainer = this.querySelector('.messages-container');
+        this.systemToggle = this.querySelector('.toggle-system');
+        
+        // Event Listeners
+        this.querySelector('.add-message').addEventListener('click', function() { self.addMessage(); });
+        this.systemToggle.addEventListener('change', function() { self.updateSystemMessage(); });
+        this.messagesContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-message')) {
+                e.target.closest('.chat-message-row').remove();
+                self.updateSystemMessageState();
+            }
+        });
+        
+        // Initial state
+        var initialMessages = this.getAttribute('initial-messages');
+        if (initialMessages) {
+            try {
+                JSON.parse(initialMessages).forEach(function(msg) {
+                    self.addMessage(msg.role, msg.content);
+                });
+            } catch(e) { console.error("Invalid initial-messages JSON:", e); this.addMessage('user'); }
+        } else {
+            this.addMessage('user');
+        }
+        this.updateSystemMessageState();
+    }
+
+    addMessage(role, content) {
+        var template = $('chat-message-row-template').content.cloneNode(true);
+        var row = template.querySelector('.chat-message-row');
+        var select = row.querySelector('.role');
+        var textarea = row.querySelector('.content');
+
+        if (role) {
+            select.value = role;
+        } else {
+            var lastRow = this.messagesContainer.querySelector('.chat-message-row:last-of-type');
+            select.value = (lastRow && lastRow.querySelector('.role').value === 'user') ? 'assistant' : 'user';
+        }
+        textarea.value = content || '';
+        
+        // A system message can only be at the top. Hide the role selector if not.
+        select.querySelector('option[value="system"]').hidden = this.messagesContainer.children.length > 0;
+        
+        this.messagesContainer.appendChild(row);
+    }
+
+    updateSystemMessage() {
+        var firstRow = this.messagesContainer.querySelector('.chat-message-row:first-of-type');
+        var hasSystem = firstRow && firstRow.querySelector('.role').value === 'system';
+
+        if (this.systemToggle.checked && !hasSystem) {
+            var template = $('chat-message-row-template').content.cloneNode(true);
+            template.querySelector('.role').value = 'system';
+            template.querySelector('.role option[value="user"]').remove();
+            template.querySelector('.role option[value="assistant"]').remove();
+            this.messagesContainer.prepend(template.querySelector('.chat-message-row'));
+        } else if (!this.systemToggle.checked && hasSystem) {
+            firstRow.remove();
+        }
+    }
+    
+    updateSystemMessageState() {
+        var firstRow = this.messagesContainer.querySelector('.chat-message-row:first-of-type');
+        this.systemToggle.checked = firstRow && firstRow.querySelector('.role').value === 'system';
+    }
+    
+    getMessages() {
+        var messages = [];
+        this.querySelectorAll('.chat-message-row').forEach(function(row) {
+            messages.push({
+                role: row.querySelector('.role').value,
+                content: row.querySelector('.content').value
+            });
+        });
+        return messages;
+    }
+});
+
+
+// --- Navigation ---
+function showPage(pageId, navEl) {
+    $$('main > section').forEach(s => s.classList.remove('active'));
+    $(pageId).classList.add('active');
+    $$('nav a').forEach(a => a.classList.remove('active'));
+    if (navEl) navEl.classList.add('active');
+    if (pageId === 'page-settings') loadConfig();
+}
+
+
+// --- API Handlers ---
+function maskText() {
+    var text = $('textInput').value;
+    handleApi(
+        () => post('/v1/mask', { text }),
+        (data) => {
+            $('maskedTextOutput').value = data.masked_text;
+            $('maskMapOutput').textContent = JSON.stringify(data.mask_map, null, 2);
+            $('unmaskedTextOutput').value = ''; // Clear previous result
+        },
+        (err) => alert(`Masking failed: ${err.message}`)
+    );
+}
+
+function unmaskText() {
+    try {
+        var masked_text = $('maskedTextOutput').value;
+        var mask_map = JSON.parse($('maskMapOutput').textContent);
+        handleApi(
+            () => post('/v1/unmask', { masked_text, mask_map }),
+            (data) => {
+                $('unmaskedTextOutput').value = data.text;
+            },
+            (err) => alert(`Unmasking failed: ${err.message}`)
+        );
+    } catch (e) {
+        alert(`Invalid Mask Map JSON: ${e.message}`);
+    }
+}
+
+function maskMessages() {
+    try {
+        var messages = $('chat-mask-editor').getMessages();
+        handleApi(
+            () => post('/v1/mask_messages', { messages }),
+            (data) => {
+                $('maskedMessagesOutput').value = JSON.stringify(data.masked_messages, null, 2);
+                $('chatMaskMapOutput').textContent = JSON.stringify(data.mask_map, null, 2);
+                $('unmaskedMessagesOutput').value = ''; // Clear
+            },
+            (err) => alert(`Masking messages failed: ${err.message}`)
+        );
+    } catch (e) {
+        alert(`Could not process messages: ${e.message}`);
+    }
+}
+
+function unmaskMessages() {
+    try {
+        var masked_messages = JSON.parse($('maskedMessagesOutput').value);
+        var mask_map = JSON.parse($('chatMaskMapOutput').textContent);
+        handleApi(
+            () => post('/v1/unmask_messages', { masked_messages, mask_map }),
+            (data) => {
+                $('unmaskedMessagesOutput').value = JSON.stringify(data.messages, null, 2);
+            },
+            (err) => alert(`Unmasking messages failed: ${err.message}`)
+        );
+    } catch (e) {
+        alert(`Invalid JSON: ${e.message}`);
+    }
+}
+
+
+// --- Gateway ---
+function checkHealth() {
+    var statusElement = $('healthStatus');
+    statusElement.textContent = 'Checking...';
+    handleApi(
+        () => get('/v1/health'),
+        (data) => {
+            statusElement.textContent = data.status.toUpperCase();
+            statusElement.style.color = 'green';
+        },
+        () => {
+            statusElement.textContent = 'OFFLINE';
+            statusElement.style.color = 'red';
+        }
+    );
+}
+
+async function testGatewayStream() {
+    var outputElement = $('gatewayStreamOutput').querySelector('code');
+    outputElement.textContent = 'Connecting to stream...';
+    try {
+        var messages = $('gatewayChatEditor').getMessages();
+        var response = await fetch('/gateway/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
+            body: JSON.stringify({ messages: messages, stream: true })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Gateway returned ${response.status} ${response.statusText}`);
+        }
+        
+        outputElement.textContent = ''; // Clear and prepare for stream
+        var reader = response.body.getReader();
+        var decoder = new TextDecoder();
+
+        while (true) {
+            var { value, done } = await reader.read();
+            if (done) break;
+            
+            var chunk = decoder.decode(value, { stream: true });
+            var lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+            for (var line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                var jsonStr = line.substring(6);
+                if (jsonStr === '[DONE]') continue;
+                try {
+                    var data = JSON.parse(jsonStr);
+                    var content = data.choices?.[0]?.delta?.content || '';
+                    outputElement.textContent += content;
+                } catch (e) { /* Ignore incomplete JSON chunks */ }
+            }
+        }
+    } catch (e) {
+        outputElement.textContent = `Error: ${e.message}`;
+        console.error(e);
+    }
+}
+
+
+// --- Settings ---
+function loadConfig() {
+    var statusEl = $('configStatus');
+    notify(statusEl, 'Loading...');
+    handleApi(
+        () => get('/v1/config'),
+        (data) => {
+            $('configEditor').value = JSON.stringify(data, null, 2);
+            notify(statusEl, 'Config loaded successfully.');
+        },
+        (error) => notify(statusEl, `Failed to load config: ${error.message}`, true)
+    );
+}
+
+function saveConfig() {
+    var statusEl = $('configStatus');
+    try {
+        var config = JSON.parse($('configEditor').value);
+        notify(statusEl, 'Saving and reloading...');
+        handleApi(
+            () => post('/v1/config', config),
+            (data) => notify(statusEl, data.message || 'Config saved and reloaded!'),
+            (error) => notify(statusEl, `Failed to save config: ${error.message}`, true)
+        );
+    } catch (e) {
+        notify(statusEl, `Invalid JSON format: ${e.message}`, true);
+    }
+}
+
+
+// --- Init ---
+window.onload = () => {
+    // Set initial page from hash or default to first tab
+    var hash = window.location.hash || '#texts';
+    var navLink = document.querySelector('nav a[href="' + hash + '"]');
+    var pageId = 'page-' + hash.substring(1);
+    showPage(pageId, navLink);
+    checkHealth();
+    setInterval(checkHealth, 30000); // Check health every 30s
+};
+</script>
+
+</body>
+</html>
