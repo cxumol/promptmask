@@ -1,5 +1,4 @@
 model,recall,fnr,fp_rate,err_rate
-baidu_ernie-4.5-0.3b,44.55%,55.45%,37.90%,36.50%
-qwen_qwen3-4b-fp8,63.93%,36.07%,24.95%,13.00%
-meta-llama_llama-3.2-1b-instruct,60.99%,39.01%,34.30%,27.50%
-google_gemma-3-1b-it,48.45%,51.55%,38.78%,10.00%
+baidu_ernie-4.5-0.3b,24.88%,75.12%,42.31%,2.00%
+qwen_qwen3-4b-fp8,47.19%,52.81%,20.55%,0.50%
+google_gemma-3-1b-it,37.16%,62.84%,38.28%,6.00%

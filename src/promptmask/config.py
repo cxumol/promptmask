@@ -65,20 +65,7 @@ def load_config(config_override = {}, config_file: str = "") -> dict:
     config["llm_api"]["base"] = os.getenv("LOCALAI_API_BASE", config["llm_api"]["base"])
     config["llm_api"]["key"] = os.getenv("LOCALAI_API_KEY", config["llm_api"]["key"])
 
-    # Apply mask_wrapper
-    config["prompt"]["system_template"] = string.Template(config["prompt"]["system_template"]).safe_substitute(
-            sensitive_include=config["sensitive"]["include"],
-            sensitive_exclude=config["sensitive"]["exclude"],
-            mask_left=config["mask_wrapper"]["left"],
-            mask_right=config["mask_wrapper"]["right"],
-        )
-    
-    config["prompt"]["examples"] = [{"role": ex["role"],
-            "content": string.Template(ex["content"]).safe_substitute(
-            mask_left=config["mask_wrapper"]["left"],
-            mask_right=config["mask_wrapper"]["right"], 
-        )} #if ex["role"] == "assistant" else ex
-        for ex in config["prompt"]["examples"]]
+    # Apply variables -> see core._build_mask_prompt
 
     if _is_verbose(config):
         logger.setLevel("DEBUG")

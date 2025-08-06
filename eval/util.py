@@ -2,6 +2,8 @@ import os,sys
 import json
 import urllib.request
 
+import functools,time
+
 if sys.version_info >= (3, 11):
     import tomllib
 else:
@@ -45,3 +47,14 @@ def load_dataset_masks()->list:
             count+=1
             if count==TOTAL_LINES: break
     return mask_vals
+
+
+def fn_timer(f):
+    @functools.wraps(f)
+    def w(*a, **kw):
+        s = time.perf_counter()
+        r = f(*a, **kw)
+        e = time.perf_counter()
+        print(f"'{f.__name__}' took {e-s:.6f}s")
+        return r
+    return w

@@ -12,60 +12,75 @@ timeout = 15.0
 [sensitive]
 # A natural language description of data categories to mask.
 # This will be injected into the system prompt for the local LLM.
-include = "passwords, social security numbers, user ID, API Keys, credit card numbers, phone numbers, IP addresses, and everthing generally considered as privacy"
+include = "password, SSN, user ID, API Key, credit card number, phone number, IP address"
 # A natural language description of data categories to explicitly ignore.
-exclude = "company names, product names, brand names, general terms, and everthing else"
+exclude = "company name, product name, brand name, general terms"
 
 # Defines the mask format.
 [mask_wrapper]
 left = "${"
 right = "}"
 
+[model_specific]
+dual_models = ["qwen3", "smollm3", "glm-4.5"]
+dual_metaprompt = "/no_think\n" # /nothink for glm-4.5
+
 # System prompt engineering for the local masking LLM.
 [prompt]
-system_template = """/no_think You are a data masking API to mask sensitive data in the user input. Respond with ONLY a JSON object mapping a unique mask to the original data.
-Make sure mask mappings are unique and non-overlapping.
+system_template = """You are a PII Masking API that maps all unique mask names to their original value.
+Make sure masks are unique and non-overlapping.
 
 Config:
-- Sensitive Data Include: ${sensitive_include}
-- Sensitive Data NOT Include: ${sensitive_exclude}
-- Granularity: word,phrase
-- Mask Key Format: UPPER_SNAKE_CASE
+- Do mask: ${sensitive_include}
+- Do not mask: ${sensitive_exclude}
+- Granularity: Masking only works at the word and phrase levels, never at the sentence or paragraph levels
+- Mask format: ${mask_left}DESCRPTIVE_MASK_NAME${mask_right}
 
-The output MUST strictly adhere to the following format:
-1. It MUST be a single, flat JSON object inside a <mask_mapping/> tag.
-2. Both keys and values MUST be strings (strictlly string-to-string KV pair).
-3. If no sensitive data is found, respond with an empty JSON object: `<mask_mapping>{}</mask_mapping>`.
-4. DO NOT include any other text or explanations.
+Request format constrains:
+- Tag-Wrapped: The raw content of user input is wrapped inside a <user_input_text> tag
+- Types: Content inside <user_input_text> can be in any type (data, code, text) and could contain PII data that need masking
 
-Example of a valid response:
-<mask_mapping>{"USER_EMAIL_1":"test@example.com","USER_PASSWORD_1":"P@ssword123!"}</mask_mapping>"""
+Response format constrains:
+- JSON Mode: Response MUST be a single, flattend, valid JSON object wrapped inside a <mask_mapping> tag
+- Type Safety: `assert all(type(value)=="string" for value of json.loads(masking_mapping).values())`
+- Edge Case: If PII data is not found at all, respond with an empty JSON object: <mask_mapping>{}</mask_mapping>
+- Example: <mask_mapping>{"${mask_left}USER_EMAIL${mask_right}":"test@example.com", "${mask_left}USER_PASSWORD${mask_right}":"P@ssword123!"}</mask_mapping>"""
+
+examples = [
+    { role = "user", content = "<user_input_text>\nMy account ID is 4567, and my credit card number is 1234-5678-9012-3456. Call me at +1 (456) 789 1234.\n</user_input_text>" },
+    { role = "assistant", content = "<mask_mapping>{\"${mask_left}USER_ACCOUNT_ID${mask_right}\":\"4567\", \"${mask_left}USER_CREDIT_CARD_NUMBER${mask_right}\":\"1234-5678-9012-3456\", \"${mask_left}USER_PHONE_NUMBER${mask_right}\":\"+1 (456) 789 1234\"}</mask_mapping>" },
+    { role = "user", content = """<user_input_text>
+[
+  {
+    "users": [
+      {"name": "Chan Ho Yin", "ip": "203.0.113.45", "role": "admin", "phone_number": "+852 9123 4567"},
+      {"name": "Priya Sharma", "email": "priya.sharma@corp.com", "role": "editor", "device_id": "DEVICE-XYZ-789"}
+    ],
+    "log_entry": "Login attempt by priya.sharma@corp.com from IP 203.0.113.45 was approved by admin Chan Ho Yin."
+  },
+  {
+    "users": [
+      {"name": "Javier Rodriguez", "date_of_birth": "1988-03-15", "role": "viewer", "employee_id": "EMP-1002"},
+      {"name": "Li Wei", "passport_id": "G12345678", "role": "developer", "department": "R&D"}
+    ],
+    "log_entry": "Access granted to user Li Wei (EMP-1002, R&D) after verification by Javier Rodriguez (DOB 1988-03-15). Passport G12345678 used."
+  }
+]
+</user_input_text>""" },
+    { role = "assistant", content = "<mask_mapping>{\"${mask_left}USER_1_NAME${mask_right}\":\"Chan Ho Yin\", \"${mask_left}USER_1_IP_ADDRESS${mask_right}\":\"203.0.113.45\", \"${mask_left}USER_1_PHONE_NUMBER${mask_right}\":\"+852 9123 4567\", \"${mask_left}USER_2_NAME${mask_right}\":\"Priya Sharma\", \"${mask_left}USER_2_EMAIL${mask_right}\":\"priya.sharma@corp.com\", \"${mask_left}USER_3_NAME${mask_right}\":\"Javier Rodriguez\", \"${mask_left}USER_3_DATE_OF_BIRTH${mask_right}\":\"1988-03-15\", \"${mask_left}USER_4_NAME${mask_right}\":\"Li Wei\", \"${mask_left}USER_4_PASSPORT_ID${mask_right}\":\"G12345678\"}</mask_mapping>" },
+    { role = "user", content = "<user_input_text>\nHow are you?\n</user_input_text>" },
+    { role = "assistant", content = "<mask_mapping>{}</mask_mapping>" },
+    { role = "user", content = """<user_input_text>
+import os,requests
+auth_token, pub_key = "sk-abcdef", "pk-12345"
+database_url = "postgres://admin:db_pass_123!@db.internal.net:5432/production"
+data = requests.get('https://api.service.com/v1/data', headers={'Authorization': f'Bearer {auth_token}'}).json()
+</user_input_text>""" },
+    { role = "assistant", content = "<mask_mapping>{\"${mask_left}MY_AUTH_TOKEN${mask_right}\":\"sk-abcdef\", \"${mask_left}MY_DB_CONNECTION_URL${mask_right}\":\"postgres://admin:db_pass_123!@db.internal.net:5432/production\"}</mask_mapping>" }
+]
 
 user_template = "<user_input_text>\n${text_to_mask}\n</user_input_text>"
 
-# Few-shot examples to improve local LLM accuracy.
-examples = [
-    { role = "user", content = "<user_input_text>\nMy account ID is 123456789, and my credit card number is 1234-5678-9012-3456. Another credit card number is 3456-1234-4567-4321.\n</user_input_text>" },
-    { role = "assistant", content = "<mask_mapping>{\"ACCOUNT_ID_1\":\"123456789\",\"CREDIT_CARD_NUMBER_1\":\"1234-5678-9012-3456\",\"CREDIT_CARD_NUMBER_2\":\"3456-1234-4567-4321\"}</mask_mapping>" },
-    { role = "user", content = """<user_input_text>
-{
-  "user":{
-    "name": "John Smith",
-    "email": "smith.j@example.com"
-  },
-  "auth_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
-  "ip_address": "203.0.113.75"
-}
-</user_input_text>""" },
-    { role = "assistant", content = "<mask_mapping>{\"USER_NAME_1\":\"John Smith\",\"USER_EMAIL_1\":\"smith.j@example.com\",\"AUTH_TOKEN_1\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\",\"IP_ADDRESS_1\":\"203.0.113.75\"}</mask_mapping>" },
-    { role = "user", content = """<user_input_text>
-import os,requests
-API_KEY = "key-a1b2c3d4e5f6g7h8i9j0"
-DB_CONNECTION_STRING = "postgres://admin:db_pass_123!@db.internal.net:5432/production"
-data = requests.get('https://api.service.com/v1/data', headers={'Authorization': f'Bearer {API_KEY}'}).json()
-</user_input_text>""" },
-    { role = "assistant", content = "<mask_mapping>{\"API_KEY_1\":\"key-a1b2c3d4e5f6g7h8i9j0\",\"DB_CONNECTION_STRING_1\":\"postgres://admin:db_pass_123!@db.internal.net:5432/production\"}</mask_mapping>" }
-]
 
 # This is only for the optional web API
 [web]

@@ -61,8 +61,22 @@ class PromptMask:
         cfg = self.config
         user_content = string.Template(cfg["prompt"]["user_template"]).safe_substitute(text_to_mask=text)
         
-        messages = [{"role": "system", "content": cfg["prompt"]["system_template"]}]
-        messages.extend(cfg["prompt"]["examples"])
+        sys_inst = string.Template(cfg["prompt"]["system_template"]).safe_substitute(
+            sensitive_include=cfg["sensitive"]["include"],
+            sensitive_exclude=cfg["sensitive"]["exclude"],
+            mask_left=cfg["mask_wrapper"]["left"],
+            mask_right=cfg["mask_wrapper"]["right"],
+        )
+        model = cfg["llm_api"]["model"].lower()
+        if any(k in model for k in cfg["model_specific"]["dual_models"]):
+            sys_inst = cfg["model_specific"]["dual_metaprompt"] + sys_inst
+        
+        messages = [{"role": "system", "content": sys_inst}]
+        messages.extend([{"role": ex["role"],
+            "content": string.Template(ex["content"]).safe_substitute(
+            mask_left=cfg["mask_wrapper"]["left"],
+            mask_right=cfg["mask_wrapper"]["right"], 
+        )} for ex in cfg["prompt"]["examples"]])
         messages.append({"role": "user", "content": user_content})
         
         return messages
@@ -84,8 +98,12 @@ class PromptMask:
             mask_wrapper = self.config.get("mask_wrapper", {})
             mask_left, mask_right = mask_wrapper.get("left", ""), mask_wrapper.get("right", "")
             wrapped_mask_map = {
-                original_value: f"{mask_left}{mask_key.upper()}{mask_right}"
-                for original_value, mask_key in mask_map.items()
+                val: (
+                    mask_key.upper()
+                    if mask_key.startswith(mask_left) and mask_key.endswith(mask_right)
+                    else f"{mask_left}{mask_key.upper()}{mask_right}"
+                )
+                for val, mask_key in mask_map.items()
             }
             
             return wrapped_mask_map
@@ -130,9 +148,10 @@ class PromptMask:
         logger.debug(f"Mask mapping by local LLM (length: {len(response_content)}): {response_content}")
 
         mask_map = self._parse_mask_response(response_content)
+        sorted_mask_items = sorted(mask_map.items(), key=lambda item: len(item[0]), reverse=True)
         
         masked_text = text
-        for original, mask in mask_map.items():
+        for original, mask in sorted_mask_items:
             masked_text = masked_text.replace(original, mask)
         
         return masked_text, mask_map
@@ -146,13 +165,14 @@ class PromptMask:
             return messages, {}
             
         _, mask_map = self.mask_str(text_to_mask)
+        sorted_mask_items = sorted(mask_map.items(), key=lambda item: len(item[0]), reverse=True)
         
         masked_messages = []
         for msg in messages:
             new_msg = msg.copy()
             if new_msg.get("content") and new_msg.get("role") not in ["system"]:
                 content = new_msg["content"]
-                for original, mask in mask_map.items():
+                for original, mask in sorted_mask_items:
                     content = content.replace(original, mask)
                 new_msg["content"] = content
             masked_messages.append(new_msg)
@@ -205,15 +225,14 @@ class PromptMask:
             return "", {}
             
         messages = self._build_mask_prompt(text)
-        logger.debug(f"Async masking request: {messages}")
             
         response_content = await self._async_oai_chat_comp(messages)
-        logger.debug(f"Async masking response: {response_content}")
 
         mask_map = self._parse_mask_response(response_content)
-        
+        sorted_mask_items = sorted(mask_map.items(), key=lambda item: len(item[0]), reverse=True)
+
         masked_text = text
-        for original, mask in mask_map.items():
+        for original, mask in sorted_mask_items:
             masked_text = masked_text.replace(original, mask)
             
         return masked_text, mask_map
@@ -226,13 +245,14 @@ class PromptMask:
             return messages, {}
             
         _, mask_map = await self.async_mask_str(text_to_mask)
+        sorted_mask_items = sorted(mask_map.items(), key=lambda item: len(item[0]), reverse=True)
         
         masked_messages = []
         for msg in messages:
             new_msg = msg.copy()
             if new_msg.get("content") and new_msg.get("role") not in ["system"]:
                 content = new_msg["content"]
-                for original, mask in mask_map.items():
+                for original, mask in sorted_mask_items:
                     content = content.replace(original, mask)
                 new_msg["content"] = content
             masked_messages.append(new_msg)
