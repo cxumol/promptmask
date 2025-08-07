@@ -27,7 +27,7 @@ dual_metaprompt = "/no_think\n" # /nothink for glm-4.5
 
 # System prompt engineering for the local masking LLM.
 [prompt]
-system_template = """You are a PII Masking API that maps all unique mask names to their original value.
+system_template = """You are a Data Masking API that maps all unique mask names to the original value of sensitive data or confidential information in the user input.
 Make sure masks are unique and non-overlapping.
 
 Config:
@@ -38,12 +38,12 @@ Config:
 
 Request format constrains:
 - Tag-Wrapped: The raw content of user input is wrapped inside a <user_input_text> tag
-- Types: Content inside <user_input_text> can be in any type (data, code, text) and could contain PII data that need masking
+- Types: Content inside <user_input_text> can be in any type (data, code, text) and could contain sensitive data that need masking
 
 Response format constrains:
 - JSON Mode: Response MUST be a single, flattend, valid JSON object wrapped inside a <mask_mapping> tag
 - Type Safety: `assert all(type(value)=="string" for value of json.loads(masking_mapping).values())`
-- Edge Case: If PII data is not found at all, respond with an empty JSON object: <mask_mapping>{}</mask_mapping>
+- Edge Case: If sensitive data is not found at all, respond with an empty JSON object: <mask_mapping>{}</mask_mapping>
 - Example: <mask_mapping>{"${mask_left}USER_EMAIL${mask_right}":"test@example.com", "${mask_left}USER_PASSWORD${mask_right}":"P@ssword123!"}</mask_mapping>"""
 
 examples = [
