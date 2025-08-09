@@ -29,6 +29,7 @@ async def unmask_sse_stream(response: httpx.Response, mask_map: dict):
                 json_str = buffer[5:].strip()
 
                 if json_str == "[DONE]":
+                    logger.info(f"data: [DONE]\n\n")
                     yield f"data: [DONE]\n\n"
                     buffer = ""
                     continue
@@ -43,6 +44,7 @@ async def unmask_sse_stream(response: httpx.Response, mask_map: dict):
                     
                     chunk_data["choices"][0]["delta"]["content"] = unmasked_content
                     
+                    logger.info(f"data: {json.dumps(chunk_data)}\n\n")
                     yield f"data: {json.dumps(chunk_data)}\n\n"
                 else:
                     yield f"{buffer}\n"
@@ -82,7 +84,7 @@ async def chat_completions_gateway(request: Request):
     is_stream = request_data.get("stream", False)
     upstream_url = f"{upstream_base_url.rstrip('/')}/chat/completions"
 
-    headers_blacklist={'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailers', 'transfer-encoding', 'upgrade', 'host'}
+    headers_blacklist={'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailers', 'transfer-encoding', 'upgrade', 'host', 'content-length', 'content-encoding'}
     headers_to_forward = {k:v for k,v in request.headers.items() if k.lower() not in headers_blacklist}
 
     try:
@@ -96,7 +98,7 @@ async def chat_completions_gateway(request: Request):
             return StreamingResponse(
                 unmask_sse_stream(upstream_resp, mask_map),
                 media_type="text/event-stream",
-                headers=dict(upstream_resp.headers)
+                headers={k:v for k,v in dict(upstream_resp.headers).items() if k.lower() not in headers_blacklist}
             )
         else: # non-stream
             upstream_resp = await client.post(upstream_url, json=request_data, headers=headers_to_forward)
