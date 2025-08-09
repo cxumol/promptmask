@@ -84,7 +84,8 @@ async def chat_completions_gateway(request: Request):
     upstream_url = f"{upstream_base_url.rstrip('/')}/chat/completions"
 
     headers_blacklist={'connection', 'keep-alive', 'proxy-authenticate', 'proxy-authorization', 'te', 'trailers', 'transfer-encoding', 'upgrade', 'host', 'content-length', 'content-encoding'}
-    headers_to_forward = {k:v for k,v in request.headers.items() if k.lower() not in headers_blacklist}
+    cleanup_headers = lambda mydict: {k:v for k,v in mydict.items() if k.lower() not in headers_blacklist}
+    headers_to_forward = cleanup_headers(request.headers)
 
     try:
         if is_stream:
@@ -97,7 +98,7 @@ async def chat_completions_gateway(request: Request):
             return StreamingResponse(
                 unmask_sse_stream(upstream_resp, mask_map),
                 media_type="text/event-stream",
-                headers={k:v for k,v in dict(upstream_resp.headers).items() if k.lower() not in headers_blacklist}
+                headers=cleanup_headers(dict(upstream_resp.headers))
             )
         else: # non-stream
             upstream_resp = await client.post(upstream_url, json=request_data, headers=headers_to_forward)
