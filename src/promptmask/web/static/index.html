@@ -175,7 +175,7 @@
         </div>
     </template>
 
-    <!-- Template for a single gateway header row -->
+    <!-- Template for KV editor rows -->
     <template id="gateway-header-row-template">
         <div class="header-row">
             <input type="text" class="header-key" placeholder="Header Name (e.g., Authorization)">
@@ -224,7 +224,7 @@ function createKeyValueEditor(c){
   return {add,get}
 }
 
-// --- Chat Interface Web Component (Light DOM for mvp.css compatibility) ---
+// --- Chat Interface Web Component (Light DOM for classless css compatibility) ---
 customElements.define('chat-interface', class extends HTMLElement {
     connectedCallback() {
         var self = this; // 'this' context for event handlers
