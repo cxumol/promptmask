@@ -12,9 +12,9 @@ timeout = 15.0
 [sensitive]
 # A natural language description of data categories to mask.
 # This will be injected into the system prompt for the local LLM.
-include = "password, SSN, user ID, API Key, credit card number, phone number, IP address"
+include = "personally identifiable information (PII), Credentials/Authentication Data"
 # A natural language description of data categories to explicitly ignore.
-exclude = "company name, product name, brand name, general terms"
+exclude = "general information"
 
 # Defines the mask format.
 [mask_wrapper]
@@ -27,7 +27,7 @@ dual_metaprompt = "/no_think\n" # /nothink for glm-4.5
 
 # System prompt engineering for the local masking LLM.
 [prompt]
-system_template = """You are a Data Masking API that maps all unique mask names to the original value of sensitive data or confidential information in the user input.
+system_template = """You are a Data Masking API that maps all unique mask names to the original value of sensitive data in the user input.
 Make sure masks are unique and non-overlapping.
 
 Config:
@@ -43,7 +43,7 @@ Request format constrains:
 Response format constrains:
 - JSON Mode: Response MUST be a single, flattend, valid JSON object wrapped inside a <mask_mapping> tag
 - Type Safety: `assert all(type(value)=="string" for value of json.loads(masking_mapping).values())`
-- Edge Case: If sensitive data is not found at all, respond with an empty JSON object: <mask_mapping>{}</mask_mapping>
+- Edge Case: If no sensitive data is found, respond with an empty JSON object: <mask_mapping>{}</mask_mapping>
 - Example: <mask_mapping>{"${mask_left}USER_EMAIL${mask_right}":"test@example.com", "${mask_left}USER_PASSWORD${mask_right}":"P@ssword123!"}</mask_mapping>"""
 
 examples = [
