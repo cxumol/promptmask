@@ -29,8 +29,7 @@ async def unmask_sse_stream(response: httpx.Response, mask_map: dict):
                 json_str = buffer[5:].strip()
 
                 if json_str == "[DONE]":
-                    logger.info(f"data: [DONE]\n\n")
-                    yield f"data: [DONE]\n\n"
+                    # logger.debug(f"data: [DONE]\n\n")
                     buffer = ""
                     continue
                 
@@ -44,7 +43,7 @@ async def unmask_sse_stream(response: httpx.Response, mask_map: dict):
                     
                     chunk_data["choices"][0]["delta"]["content"] = unmasked_content
                     
-                    logger.info(f"data: {json.dumps(chunk_data)}\n\n")
+                    # logger.debug(f"data: {json.dumps(chunk_data)}\n\n")
                     yield f"data: {json.dumps(chunk_data)}\n\n"
                 else:
                     yield f"{buffer}\n"
