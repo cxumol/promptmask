@@ -9,7 +9,7 @@ if sys.version_info >= (3, 11):
 else:
     import tomli as tomllib
 
-TOTAL_LINES=200
+TOTAL_LINES=320
 DATASET_DIR="data/"
 RAW_RESULT_DIR="data/result_raw/"
 
@@ -17,7 +17,8 @@ mkdirp = lambda dir:os.makedirs(dir, exist_ok=True)
 fpath_sanitize = lambda fpath:fpath.replace('/','_').replace(':','_')
 
 def _load_dataset():
-    url='https://huggingface.co/datasets/ai4privacy/pii-masking-300k/resolve/main/data/validation/1english_openpii_8k.jsonl'
+    # url='https://huggingface.co/datasets/ai4privacy/pii-masking-300k/resolve/main/data/validation/1english_openpii_8k.jsonl'
+    url='https://huggingface.co/datasets/cxumol/privacymask/raw/main/privacymask-en.jsonl'
     mkdirp(DATASET_DIR)
     local_path=DATASET_DIR+url.split('/')[-1]
     if not os.path.isfile(local_path):

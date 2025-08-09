@@ -1,6 +1,6 @@
 model,recall,fnr,fp_rate,err_rate
-baidu_ernie-4.5-0.3b,27.50%,72.50%,38.39%,7.00%
-qwen_qwen3-4b-fp8,55.16%,44.84%,21.29%,1.50%
-meta-llama_llama-3.2-1b-instruct,36.15%,63.85%,57.85%,70.00%
-google_gemma-3-1b-it,37.07%,62.93%,40.93%,6.50%
-gpt-oss-120b-basic,56.95%,43.05%,11.27%,0.00%
+baidu_ernie-4.5-0.3b,55.48%,44.52%,31.84%,0.94%
+qwen_qwen3-4b-fp8,89.98%,10.02%,12.58%,0.31%
+meta-llama_llama-3.2-1b-instruct,78.22%,21.78%,47.77%,45.94%
+google_gemma-3-1b-it,84.72%,15.28%,33.75%,2.19%
+gpt-oss-120b-basic,84.91%,15.09%,5.17%,0.00%
