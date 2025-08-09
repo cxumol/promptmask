@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PromptMask WebUI</title>
-    <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/barecss@1/css/bare.min.css">
     <style>
         :root { --color-accent: #007bff; --font-size: 1.1rem; }
         body { max-width: 1200px; margin: auto; padding: 1rem; }
@@ -12,12 +12,20 @@
         nav a.active { font-weight: bold; text-decoration: underline; }
         section { display: none; }
         section.active { display: block; }
+        /* The single <article> tag is now only used on pages that are not two-column */
         article { display: flex; flex-direction: column; gap: 1rem; }
         textarea { height: 180px; resize: vertical; font-family: monospace; font-size: 0.9em; }
         pre { background-color: #f0f0f0; padding: 1rem; border-radius: 4px; white-space: pre-wrap; word-break: break-all; margin: 0; }
-        button { width: 100%; }
+        button { width: auto; }
         summary { cursor: pointer; font-weight: bold; }
         #gatewayStreamOutput { min-height: 100px; border: 1px solid var(--color-border); }
+
+        /* New Adaptive Column Layout */
+        .two-column-layout { display: flex; flex-direction: row; gap: 2rem; }
+        .two-column-layout > .column { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
+        @media (max-width: 800px) {
+            .two-column-layout { flex-direction: column; gap: 1rem; }
+        }
 
         /* New Tab-based Layout Styles */
         main > section {
@@ -30,12 +38,17 @@
         /* New Chat Interface Styles */
         chat-interface { display: block; border: 1px solid var(--color-border); padding: 1rem; border-radius: 4px; }
         .chat-controls { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; }
-        .chat-controls button { width: auto; }
         .chat-controls label { margin: 0; }
         .chat-message-row { display: flex; gap: 0.5rem; align-items: flex-start; margin-bottom: 0.5rem; }
         .chat-message-row select { flex: 0 0 100px; }
         .chat-message-row textarea { flex: 1 1 auto; height: 80px; margin: 0; }
         .chat-message-row button.remove-message { flex: 0 0 auto; width: 40px; padding: 0.5rem 0; background-color: var(--color-accent-background); border-color: var(--color-accent); color: var(--color-accent); line-height: 1; }
+
+        /* New Gateway Headers Styles */
+        .headers-container { display: flex; flex-direction: column; gap: 0.5rem; }
+        .header-row { display: flex; gap: 0.5rem; align-items: center; }
+        .header-row input { flex: 1; }
+        .header-row .remove-header { flex: 0 0 auto; width: 40px; padding: 0.5rem 0; background-color: var(--color-accent-background); border-color: var(--color-accent); color: var(--color-accent); line-height: 1; }
     </style>
 </head>
 <body>
@@ -54,42 +67,50 @@
     <main>
         <!-- TEXTS PAGE -->
         <section id="page-texts" class="active">
-            <article>
-                <form onsubmit="event.preventDefault(); maskText()">
-                    <label for="textInput">Original Text</label>
-                    <textarea id="textInput" placeholder="e.g., My name is John Doe and my phone is 123-456-7890."></textarea>
-                    <button type="submit">Mask →</button>
-                </form>
-                <label for="maskedTextOutput">Masked Text</label>
-                <textarea id="maskedTextOutput" placeholder="Masked text will appear here..."></textarea>
-                <label for="maskMapOutput">Mask Map</label>
-                <pre><code id="maskMapOutput">{...}</code></pre>
-                <form onsubmit="event.preventDefault(); unmaskText()">
-                    <button type="submit">← Unmask</button>
-                </form>
-                <label for="unmaskedTextOutput">Unmasked Text</label>
-                <textarea id="unmaskedTextOutput" readonly placeholder="Unmasked result..."></textarea>
-            </article>
+            <div class="two-column-layout">
+                <div class="column">
+                    <form onsubmit="event.preventDefault(); maskText()">
+                        <label for="textInput">Original Text</label>
+                        <textarea id="textInput" placeholder="e.g., My name is John Doe and my phone is 123-456-7890."></textarea>
+                        <button type="submit">Mask →</button>
+                    </form>
+                </div>
+                <div class="column">
+                    <label for="maskedTextOutput">Masked Text</label>
+                    <textarea id="maskedTextOutput" placeholder="Masked text will appear here..."></textarea>
+                    <label for="maskMapOutput">Mask Map</label>
+                    <pre><code id="maskMapOutput">{...}</code></pre>
+                    <form onsubmit="event.preventDefault(); unmaskText()">
+                        <button type="submit">← Unmask</button>
+                    </form>
+                    <label for="unmaskedTextOutput">Unmasked Text</label>
+                    <textarea id="unmaskedTextOutput" readonly placeholder="Unmasked result..."></textarea>
+                </div>
+            </div>
         </section>
 
         <!-- CHAT PAGE -->
         <section id="page-chat">
-            <article>
-                 <form onsubmit="event.preventDefault(); maskMessages()">
-                    <label>Original Messages</label>
-                    <chat-interface id="chat-mask-editor" initial-messages='[{"role": "user", "content": "Hi, my name is Alice and I live at 123 Main St."}]'></chat-interface>
-                    <button type="submit">Mask →</button>
-                </form>
-                <label for="maskedMessagesOutput">Masked Messages (JSON)</label>
-                <textarea id="maskedMessagesOutput" placeholder="Masked messages will appear here..."></textarea>
-                <label for="chatMaskMapOutput">Mask Map</label>
-                <pre><code id="chatMaskMapOutput">{...}</code></pre>
-                <form onsubmit="event.preventDefault(); unmaskMessages()">
-                    <button type="submit">← Unmask</button>
-                </form>
-                <label for="unmaskedMessagesOutput">Unmasked Messages (JSON)</label>
-                <textarea id="unmaskedMessagesOutput" readonly placeholder="Unmasked messages result..."></textarea>
-            </article>
+            <div class="two-column-layout">
+                <div class="column">
+                    <form onsubmit="event.preventDefault(); maskMessages()">
+                        <label>Original Messages</label>
+                        <chat-interface id="chat-mask-editor" initial-messages='[{"role": "user", "content": "Hi, my name is Alice and I live at 123 Main St."}]'></chat-interface>
+                        <button type="submit">Mask →</button>
+                    </form>
+                </div>
+                <div class="column">
+                    <label for="maskedMessagesOutput">Masked Messages (JSON)</label>
+                    <textarea id="maskedMessagesOutput" placeholder="Masked messages will appear here..."></textarea>
+                    <label for="chatMaskMapOutput">Mask Map</label>
+                    <pre><code id="chatMaskMapOutput">{...}</code></pre>
+                    <form onsubmit="event.preventDefault(); unmaskMessages()">
+                        <button type="submit">← Unmask</button>
+                    </form>
+                    <label for="unmaskedMessagesOutput">Unmasked Messages (JSON)</label>
+                    <textarea id="unmaskedMessagesOutput" readonly placeholder="Unmasked messages result..."></textarea>
+                </div>
+            </div>
         </section>
 
         <!-- GATEWAY PAGE -->
@@ -102,7 +123,19 @@
                 </p>
                 <hr>
                 <h3>Gateway Live Test (Chat Completion Stream)</h3>
+                <p>Upstream Target: <code id="upstreamTarget">loading...</code><br><small>This is controlled by <code>web.upstream_oai_api_base</code> in your configuration (<b>Settings</b> tab).</small></p>
                 <form onsubmit="event.preventDefault(); testGatewayStream()">
+                    <label>Request Headers</label>
+                    <div id="gatewayHeadersContainer" class="headers-container">
+                        <!-- Header rows will be added here by JS -->
+                    </div>
+                    <button type="button" onclick="headersEditor.add()">+</button>
+                    <label>Request Body Parameters</label>
+                    <div id="gatewayParamsContainer" class="headers-container">
+                        <!-- Parameter rows will be added here by JS -->
+                    </div>
+                    <button type="button" onclick="paramsEditor.add()">+</button>
+                    
                     <label for="gatewayChatEditor">Messages</label>
                     <chat-interface id="gatewayChatEditor" initial-messages='[{"role": "user", "content": "My name is Bob. Can you write a short story about an astronaut named Bob?"}]'></chat-interface>
                     <button type="submit">Send Stream Request via Gateway</button>
@@ -142,7 +175,25 @@
         </div>
     </template>
 
+    <!-- Template for a single gateway header row -->
+    <template id="gateway-header-row-template">
+        <div class="header-row">
+            <input type="text" class="header-key" placeholder="Header Name (e.g., Authorization)">
+            <input type="text" class="header-value" placeholder="Header Value (e.g., Bearer sk-...)">
+            <button type="button" class="remove-item" title="Remove item">×</button>
+        </div>
+    </template>
+    <template id="gateway-parameter-row-template">
+        <div class="header-row">
+            <input type="text" class="param-key" placeholder="Parameter Name (e.g., model)">
+            <input type="text" class="param-value" placeholder="Value (e.g., gpt-4, or 0.7)">
+            <button type="button" class="remove-item" title="Remove item">×</button>
+        </div>
+    </template>
+
 <script>
+// global window
+var headersEditor,paramsEditor;
 // --- Utils (compact style) ---
 var $=id=>document.getElementById(id), $$=q=>document.querySelectorAll(q);
 var post=(url,d)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(r=>{if(!r.ok)return r.json().then(e=>Promise.reject(new Error(e.detail||`HTTP ${r.status}`)));return r.json()});
@@ -150,6 +201,28 @@ var get=url=>fetch(url).then(r=>{if(!r.ok)return r.json().then(e=>Promise.reject
 var notify=(el,msg,isError)=>{el.textContent=msg;el.style.color=isError?'red':'green';};
 async function handleApi(action,resultHandler,errorHandler){try{var r=await action();resultHandler(r);}catch(e){errorHandler(e);console.error(e);}}
 
+function createKeyValueEditor(c){
+  var el=$(c.containerId);
+  el.addEventListener('click',e=>{
+    if(e.target.classList.contains(c.removeClass))e.target.closest('.header-row').remove();
+  });
+  function add(k,v){
+    var t=$(c.templateId).content.cloneNode(true);
+    t.querySelector('.'+c.keyClass).value=k||'';
+    t.querySelector('.'+c.valueClass).value=v||'';
+    el.appendChild(t);
+  }
+  function get(){
+    var d={};
+    el.querySelectorAll('.header-row').forEach(r=>{
+      var k=r.querySelector('.'+c.keyClass).value.trim(),
+          v=r.querySelector('.'+c.valueClass).value.trim();
+      if(k)d[k]=c.valueParser?c.valueParser(v):v
+    });
+    return d;
+  }
+  return {add,get}
+}
 
 // --- Chat Interface Web Component (Light DOM for mvp.css compatibility) ---
 customElements.define('chat-interface', class extends HTMLElement {
@@ -251,6 +324,7 @@ function showPage(pageId, navEl) {
     $$('nav a').forEach(a => a.classList.remove('active'));
     if (navEl) navEl.classList.add('active');
     if (pageId === 'page-settings') loadConfig();
+    if (pageId === 'page-gateway') updateGatewayInfo();
 }
 
 
@@ -335,20 +409,32 @@ function checkHealth() {
     );
 }
 
+function updateGatewayInfo() {
+    var targetEl = $('upstreamTarget');
+    if (!targetEl) return;
+    targetEl.textContent = 'loading...';
+    get('/v1/config').then(function(data) {
+        targetEl.textContent = data?.web?.upstream_oai_api_base || 'Not Set';
+    }).catch(function(err) {
+        targetEl.textContent = 'Error loading config.';
+        console.error('Failed to load upstream target info:', err);
+    });
+}
+
 async function testGatewayStream() {
     var outputElement = $('gatewayStreamOutput').querySelector('code');
     outputElement.textContent = 'Connecting to stream...';
     try {
         var messages = $('gatewayChatEditor').getMessages();
-        var response = await fetch('/gateway/v1/chat/completions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' },
-            body: JSON.stringify({ messages: messages, stream: true })
-        });
+        var customHeaders = headersEditor.get();
+        var headers = { 'Content-Type': 'application/json', 'Accept': 'text/event-stream' };
+        Object.assign(headers, customHeaders);
 
-        if (!response.ok) {
-            throw new Error(`Gateway returned ${response.status} ${response.statusText}`);
-        }
+        var customParams = paramsEditor.get();
+        var payload = Object.assign({ messages: messages, stream: true }, customParams)
+        var response = await fetch('/gateway/v1/chat/completions',{method:'POST',headers,body:JSON.stringify(payload)});
+
+        if (!response.ok) throw new Error(`Gateway returned ${response.status} ${response.statusText}`);
         
         outputElement.textContent = ''; // Clear and prepare for stream
         var reader = response.body.getReader();
@@ -400,7 +486,10 @@ function saveConfig() {
         notify(statusEl, 'Saving and reloading...');
         handleApi(
             () => post('/v1/config', config),
-            (data) => notify(statusEl, data.message || 'Config saved and reloaded!'),
+            (data) => {
+                notify(statusEl, data.message || 'Config saved and reloaded!');
+                updateGatewayInfo(); // Update the gateway page info as it might have changed
+            },
             (error) => notify(statusEl, `Failed to save config: ${error.message}`, true)
         );
     } catch (e) {
@@ -411,6 +500,28 @@ function saveConfig() {
 
 // --- Init ---
 window.onload = () => {
+    headersEditor = createKeyValueEditor({
+        containerId: 'gatewayHeadersContainer',
+        templateId: 'gateway-header-row-template',
+        keyClass: 'header-key',
+        valueClass: 'header-value',
+        removeClass: 'remove-item'
+    });
+    headersEditor.add('Authorization', 'Bearer ');
+    paramsEditor = createKeyValueEditor({
+        containerId: 'gatewayParamsContainer',
+        templateId: 'gateway-parameter-row-template',
+        keyClass: 'param-key',
+        valueClass: 'param-value',
+        removeClass: 'remove-item',
+        valueParser: function(value) { // Special parser for params
+            try { return JSON.parse(value); } 
+            catch (e) { return value; } // Return as string if not valid JSON
+        }
+    });
+    paramsEditor.add('model', 'gpt-100');
+    paramsEditor.add('temperature', '0.7');
+
     // Set initial page from hash or default to first tab
     var hash = window.location.hash || '#texts';
     var navLink = document.querySelector('nav a[href="' + hash + '"]');
