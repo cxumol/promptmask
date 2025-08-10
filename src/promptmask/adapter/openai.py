@@ -1,10 +1,18 @@
 # src/promptmask/adapter/openai.py
 
 from openai import OpenAI
-from openai import AsyncOpenAI as BaseAsyncOpenAI
+from openai import AsyncOpenAI
 import inspect
 
+from openai.types.chat.chat_completion_chunk import ChoiceDelta
+from typing import Optional
+
 from ..core import PromptMask
+
+if not hasattr(ChoiceDelta, 'original_content'): # Static monkey patch
+    ChoiceDelta.original_content: Optional[str] = None
+    # ChoiceDelta.model_rebuild(force=True)
+    # setattr(ChoiceDelta, 'original_content', None)
 
 class OpenAIMasked(OpenAI):
     """
@@ -51,7 +59,8 @@ class OpenAIMasked(OpenAI):
                 return self._promptmask.unmask_stream(response, mask_map)
             else:
                 if response.choices:
-                    # Unmask content in choices
+                    # preserve original content
+                    setattr(response.choices[0].message, "original_content", response.choices[0].message.content)
                     unmasked_content = self._promptmask.unmask_str(
                         response.choices[0].message.content, mask_map
                     )
