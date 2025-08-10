@@ -20,7 +20,7 @@ class PromptMask:
         """
         self._init_config_override = config
         self._init_config_file = config_file
-        self._lock = asyncio.Lock() # 添加一个锁来处理并发重载请求
+        self._lock = asyncio.Lock()
         self._initialize_clients()
 
     def _initialize_clients(self):

@@ -11,12 +11,13 @@ from ..utils import logger
 
 router = APIRouter(prefix="/gateway")
 
-async def unmask_sse_stream(response: httpx.Response, mask_map: dict):
+async def unmask_sse_stream(response: httpx.Response, mask_map: dict, prompt_masker: PromptMask):
     """
     unmask SSE in realtime
     """
-    buffer = ""
+    buffer, content_buffer = "", "" # SSE chunk / accumulate delta content
     inverted_map = {mask: original for original, mask in mask_map.items()}
+    left_wrapper, right_wrapper = prompt_masker.config["mask_wrapper"]["left"], prompt_masker.config["mask_wrapper"]["right"]
     
     async for line in response.aiter_lines():
         if not line.strip():
@@ -34,23 +35,46 @@ async def unmask_sse_stream(response: httpx.Response, mask_map: dict):
                     continue
                 
                 chunk_data = json.loads(json_str)
+                output_content_this_chunk = ""
                 
                 # Unmask a delta content chunk
                 if (delta := chunk_data.get("choices", [{}])[0].get("delta")) and (content := delta.get("content")): #py38
-                    unmasked_content = content
-                    for mask, original in inverted_map.items():
-                        unmasked_content = unmasked_content.replace(mask, original)
+                    delta["original_content"] = content # Keep original content
+                    content_buffer += content
                     
-                    chunk_data["choices"][0]["delta"]["content"] = unmasked_content
-                    
-                    # logger.debug(f"data: {json.dumps(chunk_data)}\n\n")
+                    while True:
+                        start_pos = content_buffer.find(left_wrapper)
+                        if start_pos == -1:
+                            # No more masks, flush buffer and break
+                            output_content_this_chunk += content_buffer
+                            content_buffer = ""
+                            break
+                        
+                        end_pos = content_buffer.find(right_wrapper, start_pos+len(left_wrapper))
+                        if end_pos == -1:
+                            # Found a partial mask, flush text before it and keep the partial mask in buffer
+                            output_content_this_chunk += content_buffer[:start_pos]
+                            content_buffer = content_buffer[start_pos:]
+                            break
+
+                        # Found a complete mask
+                        text_before_mask = content_buffer[:start_pos]
+                        full_mask = content_buffer[start_pos : end_pos + len(right_wrapper)]
+                        
+                        unmasked_value = inverted_map.get(full_mask, full_mask)
+                        
+                        output_content_this_chunk += text_before_mask + unmasked_value
+                        content_buffer = content_buffer[end_pos + len(right_wrapper):]
+
+                    delta["content"] = output_content_this_chunk
+
                     yield f"data: {json.dumps(chunk_data)}\n\n"
                 else:
-                    yield f"{buffer}\n"
+                     yield f"{buffer}\n"
 
                 buffer = "" # flush
             except json.JSONDecodeError:
-                continue
+                continue # Incomplete JSON, wait for more data
         else: # e.g.: event, id, retry
             yield f"{buffer}\n"
             buffer = ""
@@ -96,7 +120,7 @@ async def chat_completions_gateway(request: Request):
             upstream_resp.raise_for_status()
 
             return StreamingResponse(
-                unmask_sse_stream(upstream_resp, mask_map),
+                unmask_sse_stream(upstream_resp, mask_map, prompt_masker),
                 media_type="text/event-stream",
                 headers=cleanup_headers(dict(upstream_resp.headers))
             )
