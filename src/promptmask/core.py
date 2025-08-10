@@ -197,25 +197,45 @@ class PromptMask:
         return unmasked_messages
 
     def unmask_stream(self, stream: Generator, mask_map: Dict[str, str]) -> Generator:
-        """Wraps a streaming response to unmask content on-the-fly."""
-        buffer = ""
-        # Create an inverted map for efficient replacement
+        """Wraps a streaming response to unmask content on-the-fly with proper buffering."""
+        content_buffer = ""
         inverted_map = {mask: original for original, mask in mask_map.items()}
+        left_wrapper = self.config["mask_wrapper"]["left"]
+        right_wrapper = self.config["mask_wrapper"]["right"]
 
         for chunk in stream:
-            # Assuming chunk is an OpenAI-like stream object with choices[0].delta.content
-            content = chunk.choices[0].delta.content or ""
-            buffer += content
+            if not (chunk.choices and (delta := chunk.choices[0].delta) and (original_content := delta.content)):
+                yield chunk
+                continue
             
-            unmasked_chunk = buffer
-            for mask, original in inverted_map.items():
-                unmasked_chunk = unmasked_chunk.replace(mask, original)
+            # Dynamically attach original_content. May not pass strict type checks but works in practice.
+            setattr(delta, 'original_content', original_content)
+            
+            content_buffer += original_content
+            output_content_this_chunk = ""
 
-            # Yield what's been unmasked and keep the rest in buffer
-            # This is tricky; a simple approach is to yield all and clear buffer
-            chunk.choices[0].delta.content = unmasked_chunk
+            while True:
+                start_pos = content_buffer.find(left_wrapper)
+                if start_pos == -1:
+                    output_content_this_chunk += content_buffer
+                    content_buffer = ""
+                    break
+                
+                end_pos = content_buffer.find(right_wrapper, start_pos+len(left_wrapper))
+                if end_pos == -1:
+                    output_content_this_chunk += content_buffer[:start_pos]
+                    content_buffer = content_buffer[start_pos:]
+                    break
+
+                text_before_mask = content_buffer[:start_pos]
+                full_mask = content_buffer[start_pos : end_pos + len(right_wrapper)]
+                unmasked_value = inverted_map.get(full_mask, full_mask)
+                
+                output_content_this_chunk += text_before_mask + unmasked_value
+                content_buffer = content_buffer[end_pos + len(right_wrapper):]
+
+            delta.content = output_content_this_chunk
             yield chunk
-            buffer = ""
 
     # --- Asynchronous Methods ---
 
@@ -260,17 +280,43 @@ class PromptMask:
         return masked_messages, mask_map
 
     async def async_unmask_stream(self, stream: AsyncGenerator, mask_map: Dict[str, str]) -> AsyncGenerator:
-        """Async wrapper for unmasking a stream."""
-        buffer = ""
+        """Async wrapper for unmasking a stream with proper buffering."""
+        content_buffer = ""
         inverted_map = {mask: original for original, mask in mask_map.items()}
-        async for chunk in stream:
-            content = chunk.choices[0].delta.content or ""
-            buffer += content
-            
-            unmasked_chunk = buffer
-            for mask, original in inverted_map.items():
-                unmasked_chunk = unmasked_chunk.replace(mask, original)
+        left_wrapper = self.config["mask_wrapper"]["left"]
+        right_wrapper = self.config["mask_wrapper"]["right"]
 
-            chunk.choices[0].delta.content = unmasked_chunk
+        async for chunk in stream:
+            if not (chunk.choices and (delta := chunk.choices[0].delta) and (original_content := delta.content)):
+                yield chunk
+                continue
+
+            setattr(delta, 'original_content', original_content)
+            
+            content_buffer += original_content
+            output_content_this_chunk = ""
+
+            while True:
+                start_pos = content_buffer.find(left_wrapper)
+                if start_pos == -1:
+                    output_content_this_chunk += content_buffer
+                    content_buffer = ""
+                    break
+                
+                # --- RECOMMENDED CHANGE HERE ---
+                end_pos = content_buffer.find(right_wrapper, start_pos + len(left_wrapper))
+                if end_pos == -1:
+                    output_content_this_chunk += content_buffer[:start_pos]
+                    content_buffer = content_buffer[start_pos:]
+                    break
+
+                text_before_mask = content_buffer[:start_pos]
+                # Adjust end position to capture the full wrapper in the slice
+                full_mask = content_buffer[start_pos : end_pos + len(right_wrapper)]
+                unmasked_value = inverted_map.get(full_mask, full_mask)
+                
+                output_content_this_chunk += text_before_mask + unmasked_value
+                content_buffer = content_buffer[end_pos + len(right_wrapper):]
+
+            delta.content = output_content_this_chunk
             yield chunk
-            buffer = ""
