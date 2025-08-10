@@ -10,24 +10,21 @@
         body { max-width: 1200px; margin: auto; padding: 1rem; }
         nav a { text-decoration: none; }
         nav a.active { font-weight: bold; text-decoration: underline; }
-        section { display: none; }
-        section.active { display: block; }
         /* The single <article> tag is now only used on pages that are not two-column */
         article { display: flex; flex-direction: column; gap: 1rem; }
         textarea { height: 180px; resize: vertical; font-family: monospace; font-size: 0.9em; }
         pre { background-color: #f0f0f0; padding: 1rem; border-radius: 4px; white-space: pre-wrap; word-break: break-all; margin: 0; }
         button { width: auto; }
         summary { cursor: pointer; font-weight: bold; }
-        #gatewayStreamOutput { min-height: 100px; border: 1px solid var(--color-border); }
 
-        /* New Adaptive Column Layout */
+        /* Adaptive Column Layout */
         .two-column-layout { display: flex; flex-direction: row; gap: 2rem; }
         .two-column-layout > .column { flex: 1; display: flex; flex-direction: column; gap: 1rem; }
         @media (max-width: 800px) {
             .two-column-layout { flex-direction: column; gap: 1rem; }
         }
 
-        /* New Tab-based Layout Styles */
+        /* Tab-based Layout Styles */
         main > section {
             display: none;
             padding-top: 1rem;
@@ -35,7 +32,7 @@
         }
         main > section.active { display: block; }
         
-        /* New Chat Interface Styles */
+        /* Chat Interface Styles */
         chat-interface { display: block; border: 1px solid var(--color-border); padding: 1rem; border-radius: 4px; }
         .chat-controls { display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; }
         .chat-controls label { margin: 0; }
@@ -44,11 +41,14 @@
         .chat-message-row textarea { flex: 1 1 auto; height: 80px; margin: 0; }
         .chat-message-row button.remove-message { flex: 0 0 auto; width: 40px; padding: 0.5rem 0; background-color: var(--color-accent-background); border-color: var(--color-accent); color: var(--color-accent); line-height: 1; }
 
-        /* New Gateway Headers Styles */
+        /* Gateway Headers & Params */
         .headers-container { display: flex; flex-direction: column; gap: 0.5rem; }
         .header-row { display: flex; gap: 0.5rem; align-items: center; }
         .header-row input { flex: 1; }
-        .header-row .remove-header { flex: 0 0 auto; width: 40px; padding: 0.5rem 0; background-color: var(--color-accent-background); border-color: var(--color-accent); color: var(--color-accent); line-height: 1; }
+        .header-row .remove-item { flex: 0 0 auto; width: 40px; padding: 0.5rem 0; background-color: var(--color-accent-background); border-color: var(--color-accent); color: var(--color-accent); line-height: 1; }
+        /* Gateway Layout */
+        .side-by-side { display: flex; flex-direction: row; gap:1rem;}
+        .side-by-side > figure { flex: 1; min-width: 0; margin:0}
     </style>
 </head>
 <body>
@@ -137,11 +137,19 @@
                     <button type="button" onclick="paramsEditor.add()">+</button>
                     
                     <label for="gatewayChatEditor">Messages</label>
-                    <chat-interface id="gatewayChatEditor" initial-messages='[{"role": "user", "content": "My name is Bob. Can you write a short story about an astronaut named Bob?"}]'></chat-interface>
+                    <chat-interface id="gatewayChatEditor" initial-messages='[{"role": "user", "content": "My name is John Doe and my phone is 123-456-7890. Can you rewrite the information in CSV format"}]'></chat-interface>
                     <button type="submit">Send Stream Request via Gateway</button>
                 </form>
-                <label for="gatewayStreamOutput">Live Unmasked Stream Output</label>
-                <pre id="gatewayStreamOutput"><code></code></pre>
+                <section class="side-by-side">
+                    <figure>
+                        <label for="gatewayStreamOriginalOutput">Live Original (Masked) Stream Output</label>
+                        <pre id="gatewayStreamOriginalOutput"><code></code></pre>
+                    </figure>
+                    <figure>
+                        <label for="gatewayStreamOutput">Live Unmasked Stream Output</label>
+                        <pre id="gatewayStreamOutput"><code></code></pre>
+                    </figure>
+                </section>
             </article>
         </section>
 
@@ -422,8 +430,11 @@ function updateGatewayInfo() {
 }
 
 async function testGatewayStream() {
-    var outputElement = $('gatewayStreamOutput').querySelector('code');
-    outputElement.textContent = 'Connecting to stream...';
+    var unmaskedOutputElement = $('gatewayStreamOutput').querySelector('code');
+    var originalOutputElement = $('gatewayStreamOriginalOutput').querySelector('code'); // New element
+    unmaskedOutputElement.textContent = 'Connecting to stream...';
+    originalOutputElement.textContent = ''; // Clear original output area
+    
     try {
         var messages = $('gatewayChatEditor').getMessages();
         var customHeaders = headersEditor.get();
@@ -436,7 +447,8 @@ async function testGatewayStream() {
 
         if (!response.ok) throw new Error(`Gateway returned ${response.status} ${response.statusText}`);
         
-        outputElement.textContent = ''; // Clear and prepare for stream
+        unmaskedOutputElement.textContent = ''; // Clear and prepare for stream
+        originalOutputElement.textContent = ''; // Clear and prepare for stream
         var reader = response.body.getReader();
         var decoder = new TextDecoder();
 
@@ -453,13 +465,19 @@ async function testGatewayStream() {
                 if (jsonStr === '[DONE]') continue;
                 try {
                     var data = JSON.parse(jsonStr);
-                    var content = data.choices?.[0]?.delta?.content || '';
-                    outputElement.textContent += content;
+                    var unmaskedContent = data.choices?.[0]?.delta?.content || '';
+                    var originalContent = data.choices?.[0]?.delta?.original_content;
+
+                    // If original_content exists, use it. Otherwise, it's not a content chunk we care about.
+                    if (originalContent !== undefined) originalOutputElement.textContent += originalContent;
+                    unmaskedOutputElement.textContent += unmaskedContent;
+
                 } catch (e) { /* Ignore incomplete JSON chunks */ }
             }
         }
     } catch (e) {
-        outputElement.textContent = `Error: ${e.message}`;
+        unmaskedOutputElement.textContent = `Error: ${e.message}`;
+        originalOutputElement.textContent = `Error: ${e.message}`;
         console.error(e);
     }
 }
