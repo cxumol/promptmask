@@ -3,11 +3,18 @@
 import json
 import string
 import asyncio
-from typing import List, Dict, Tuple, AsyncGenerator, Generator
+from typing import List, Dict, Tuple, AsyncGenerator, Generator, Optional
 from openai import OpenAI, AsyncOpenAI, APITimeoutError
+from openai.types.chat.chat_completion_chunk import ChoiceDelta
+from types import SimpleNamespace
 
 from .config import load_config
 from .utils import _btwn, logger, is_dict_str_str
+
+if not hasattr(ChoiceDelta, 'original_content'): # Static monkey patch
+    ChoiceDelta.original_content: Optional[str] = None
+    # ChoiceDelta.model_rebuild(force=True)
+    # setattr(ChoiceDelta, 'original_content', None)
 
 class PromptMask:
     def __init__(self, config: dict = {}, config_file: str =  ""):
@@ -85,7 +92,7 @@ class PromptMask:
         """Parses the local LLM response to extract the mask map."""
         try:
             json_str = _btwn(response_content, "{", "}")
-            logger.debug("json_str::",json_str)
+            logger.debug(f"json_str:: {json_str}")
             reversed_map = json.loads(json_str)
             if not is_dict_str_str(reversed_map):
                 raise TypeError("Mask map should be a dictionary mapping strings to strings.")
@@ -208,8 +215,10 @@ class PromptMask:
                 yield chunk
                 continue
             
-            # Dynamically attach original_content. May not pass strict type checks but works in practice.
-            setattr(delta, 'original_content', original_content)
+            # Dynamically attach original_content.
+            # setattr(delta, 'original_content', original_content)
+            new_delta = SimpleNamespace(**delta.model_dump())
+            new_delta.original_content = original_content or ""
             
             content_buffer += original_content
             output_content_this_chunk = ""
@@ -234,7 +243,8 @@ class PromptMask:
                 output_content_this_chunk += text_before_mask + unmasked_value
                 content_buffer = content_buffer[end_pos + len(right_wrapper):]
 
-            delta.content = output_content_this_chunk
+            new_delta.content = output_content_this_chunk
+            chunk.choices[0].delta = new_delta
             yield chunk
 
     # --- Asynchronous Methods ---
@@ -303,7 +313,6 @@ class PromptMask:
                     content_buffer = ""
                     break
                 
-                # --- RECOMMENDED CHANGE HERE ---
                 end_pos = content_buffer.find(right_wrapper, start_pos + len(left_wrapper))
                 if end_pos == -1:
                     output_content_this_chunk += content_buffer[:start_pos]
