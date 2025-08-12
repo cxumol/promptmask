@@ -30,7 +30,7 @@ PromptMask ensures your private data never leaves your machines. It redacts and 
 
 The core principle is to use a trusted (local) model as a "privacy filter" for a powerful, remote model. The process is fully automated.
 
-<!-- ![diagram_placeholder](TBD.svg) -->
+![promptmask-workflow-digram](docs/assets/promptmask-workflow-digram.svg)
 
 ## Quickstart
 
