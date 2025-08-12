@@ -22,8 +22,8 @@ PromptMask ensures your private data never leaves your machines. It redacts and 
     + [For Python Developers: OpenAIMasked](#for-python-developers-openaimasked)
 * [Configuration](#configuration)
 * [Advanced Usage: PromptMask Class](#advanced-usage-promptmask-class)
-* [Web Server: WebUI & API](#web-server-webui-api)
-* [Development & Contribution](#development-contribution)
+* [Web Server: WebUI & API](#web-server-webui--api)
+* [Development & Contribution](#development--contribution)
 * [License](#license)
 
 ## How It Works
