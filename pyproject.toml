@@ -10,7 +10,7 @@ version = "0.1.0"
 authors = [
     { name = "cxumol", email = "cxumol@gmail.com" },
 ]
-description = "Keep your secret while chatting with AI by redacting/unredacting sensitive data using a local LLM."
+description = "A local-first privacy layer for Large Language Models."
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -23,6 +23,8 @@ dependencies = [
     "httpx>=0.25",
     "tomli; python_version < '3.11'",
 ]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
 
 [project.urls]
 Homepage = "https://github.com/cxumol/promptmask"
