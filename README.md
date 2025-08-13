@@ -36,13 +36,14 @@ The core principle is to use a trusted (local) model as a "privacy filter" for a
 
 ### Prerequisites
 
-Ensure you have a local LLM running with an OpenAI-compatible API endpoint. [Ollama](https://ollama.com/) is a popular and straightforward option. By default, `PromptMask` will attempt to connect to `http://localhost:11434/v1`.
+Ensure you have a local LLM running with an OpenAI-compatible API endpoint.   
+By default, `PromptMask` will attempt to connect to `http://localhost:11434/v1` for masking sensitive information.
 
-Other options to run a local OpenAI-compatible LLM API include llama.cpp and vLLM.
+[Ollama](https://ollama.com/) is a popular and straightforward option to run a local OpenAI-compatible LLM API. Other options include llama.cpp and vLLM.
 
 ### For General Users: local OpenAI-compatible API Gateway
 
-You can point any existing tool or application at the local gateway. It's the seamless way to add `PromptMask` layer without coding in Python.
+Point any existing tool/app at the local gateway. It's the seamless way to add `PromptMask` layer without coding in Python.
 
 1.  **Install promptmask-web via pip:**
     ```bash
@@ -53,12 +54,10 @@ You can point any existing tool or application at the local gateway. It's the se
     ```bash
     promptmask-web
     ```
-    The gateway is now running at `http://localhost:8000`.
+    The console will display where the web server is launched. For example, `# INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)`
 
 3.  **Use the gateway endpoint:**
     Simply replace the official OpenAI API base URL with the local gateway's URL in your tool of choice.
-
-    For example, using `curl`:
 
     ```bash
     curl http://localhost:8000/gateway/v1/chat/completions \
@@ -109,20 +108,19 @@ The `OpenAIMasked` class is a drop-in replacement for the standard `openai.OpenA
     ```python
     from promptmask import OpenAIMasked
 
-    # This client has the same interface as openai.OpenAI, but with automatic privacy redaction.
+    # openai.OpenAI client, but with automatic privacy redaction.
     client = OpenAIMasked(base_url="https://api.cloud-ai-service.example.com/v1") # reads OPENAI_API_KEY from environment variables by default.
 
-    # --- Standard Request ---
+    # non-stream
     response = client.chat.completions.create(
         model="gpt-100-pro",
         messages=[
             {"role": "user", "content": "My user ID is johndoe and my phone number is 4567890. Please help me write an application letter."}
         ]
     )
-    # The response content is automatically unmasked.
-    print(response.choices[0].message.content)
+    print(response.choices[0].message.content) # access response.choices[0].message.original_content for original maksed one.
 
-    # --- Streaming Request ---
+    # stream
     stream = client.chat.completions.create(
         model="gpt-101-turbo-mini",
         stream=True,
@@ -131,34 +129,32 @@ The `OpenAIMasked` class is a drop-in replacement for the standard `openai.OpenA
         ]
     )
 
-    # The stream chunks are unmasked on-the-fly.
+    # response chunks are unmasked on-the-fly
     for chunk in stream:
         print(chunk.choices[0].delta.content or "", end="")
     ```
 
 ## Configuration
 
-To customize, create a `promptmask.config.user.toml` file in your working directory. For example, to change the categories of data to mask:
+To customize, create a `promptmask.config.user.toml` file in working directory. For example:
 
 ```toml
 # promptmask.config.user.toml
 
 [llm_api]
-# Specify a particular local model to use for masking
+# Specify a particular local model to use for masking; model name depends on the inference engine
 model = "qwen2.5:7b"
 
 # Define what data is considered sensitive.
 [sensitive]
-# Override the default one
-include = "personal ID and passwords"
+include = "personal ID and passwords" # Override the default one
 ```
 
 Check [promptmask.config.default.toml](src/promptmask/promptmask.config.default.toml) for a full config file example. 
 
-Environment variables can also be used to override specific settings:
+Environment variables to override specific settings:
 *   `LOCALAI_API_BASE`: The Base URL for your local LLM's API (e.g., `http://192.168.1.234:11434/v1`).
 *   `LOCALAI_API_KEY`: The API key for your local LLM, if required.
-
 
 <details>
 <summary>Configuration Priority Hierarchy</summary>
@@ -186,7 +182,7 @@ async def main():
 
     original_text = "Please process the visa application for Jensen Huang, passport number A12345678."
 
-    # 1. Mask the text
+    # 1. Mask your secrets
     masked_text, mask_map = await masker.async_mask_str(original_text)
 
     print(f"Masked Text: {masked_text}")
@@ -209,15 +205,21 @@ if __name__ == "__main__":
 
 ## Web Server: WebUI & API
 
-When you run `promptmask-web` with the installed `promptmask[web]`, a full-featured web service is launched at `http://localhost:8000`. It includes:
+```bash
+pip install "promptmask[web]"
+promptmask-web
+# INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+```
+
+It includes:
 
 *   A simple **Web UI**
     * to try out features including masking/unmasking and the gateway
-    * A **Configuration Manager** to view and hot-reload settings.
-*   Interactive API documentation (via Swagger UI) at `http://localhost:8000/docs`
-    *   **API Gateway** at `/gateway/v1/chat/completions` to take care of your privacy seamlessly.
-    *   Direct **Masking/Unmasking API Endpoints** (details on API documentation).
-    *   Edit configuration via `/config` endpoint.
+    * A Configuration Manager to view and hot-reload settings.
+*   Interactive API documentation (via Swagger UI) at http://localhost:8000/docs
+    *   **API Gateway** to take care of your privacy seamlessly.
+    *   Direct Masking/Unmasking API.
+    *   Edit promptmask configuration via Web API.
 
 ### Web UI Preview
 
