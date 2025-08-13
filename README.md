@@ -10,7 +10,9 @@ What if we can combine the advantages of both sides?
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Versions](https://img.shields.io/pypi/pyversions/promptmask.svg)](https://pypi.org/project/promptmask/)
 
-PromptMask ensures your private data never leaves your machines. It redacts and un-redacts sensitive data locally, so that only anonymized data is sent to third-party AI services.
+PromptMask ensures your private data never leaves your machines. It redacts and un-redacts sensitive data locally, so that only anonymized data is sent to third-party AI services.(*)
+
+> (*): "Local" in this project is used only for terminology distinction, differing from Cloud AI whose privacy protection is questionable. PromptMask is able to process sensitive data with any remote LLM that you trust.
 
 ## Table of Contents
 
@@ -36,10 +38,13 @@ The core principle is to use a trusted (local) model as a "privacy filter" for a
 
 ### Prerequisites
 
-Ensure you have a local LLM running with an OpenAI-compatible API endpoint.   
+- A local LLM running with an OpenAI-compatible API endpoint.   
 By default, `PromptMask` will attempt to connect to `http://localhost:11434/v1` for masking sensitive information.
 
-[Ollama](https://ollama.com/) is a popular and straightforward option to run a local OpenAI-compatible LLM API. Other options include llama.cpp and vLLM.
+> [Ollama](https://ollama.com/) is a popular and straightforward option to run a local OpenAI-compatible LLM API. Other options include llama.cpp and vLLM.
+> 
+> Don't worry if you don't have a local LLM. PromptMask won't restrict a local address. You can always point the LLM endpoint to a remote (trusted) address, such as a self-hosted GPU cloud or your trusted AI service provider.  
+
 
 ### For General Users: local OpenAI-compatible API Gateway
 
@@ -73,9 +78,9 @@ Point any existing tool/app at the local gateway. It's the seamless way to add `
         ]
       }'
     ```
-    Your sensitive data (`Ho Shih Chieh`, `Y1a2e87`) will be redacted before being sent to OpenAI, and then restored in the final response.
+    Your sensitive data (`Ho Shih Chieh`, `Y1a2e87`) will be redacted before being sent to the AI company, and then restored in the final response.
 
-    If you are using other cloud AI providers, such as Google Gemini, you need to add `web.upstream_oai_api_base` to your config file (more detail on [configuration](#configuration) section)
+    Besides OpenAI, if you are using other cloud AI providers, such as Google Gemini, you need to add `web.upstream_oai_api_base` to your config file (more detail on [configuration](#configuration) section)
 
     ```toml
     [web]
