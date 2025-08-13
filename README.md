@@ -12,7 +12,7 @@ What if we can combine the advantages of both sides?
 
 PromptMask ensures your private data never leaves your machines. It redacts and un-redacts sensitive data locally, so that only anonymized data is sent to third-party AI services.(*)
 
-> (*): "Local" in this project is used only for terminology distinction, differing from Cloud AI whose privacy protection is questionable. PromptMask is able to process sensitive data with any remote LLM that you trust.
+> (*): "Local" in this project is used only for terminology distinction, differing from Cloud AI whose privacy protection is questionable. PromptMask is fully compatible with any remote LLM that you trust to process sensitive data.
 
 ## Table of Contents
 
