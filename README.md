@@ -43,7 +43,7 @@ By default, `PromptMask` will attempt to connect to `http://localhost:11434/v1` 
 
 > [Ollama](https://ollama.com/) is a popular and straightforward option to run a local OpenAI-compatible LLM API. Other options include llama.cpp and vLLM.
 > 
-> Don't worry if you don't have a local LLM. PromptMask won't restrict a local address. You can always point the LLM endpoint to a remote (trusted) address, such as a self-hosted GPU cloud or your trusted AI service provider.  
+> Don't worry if you don't have a local LLM. PromptMask won't restrict a local address. You can always set a remote (trusted) endpoint as PromptMask's LLM API, such as a self-hosted GPU cloud or your trusted AI service provider.  
 
 
 ### For General Users: local OpenAI-compatible API Gateway
