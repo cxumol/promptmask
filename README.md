@@ -219,6 +219,15 @@ When you run `promptmask-web` with the installed `promptmask[web]`, a full-featu
     *   Direct **Masking/Unmasking API Endpoints** (details on API documentation).
     *   Edit configuration via `/config` endpoint.
 
+### Web UI Preview
+
+<img width="1216" height="654" alt="WebUI preview 1 mask string" src="https://github.com/user-attachments/assets/4a7e8863-e88c-4b62-b489-57ef73edb43d" />
+<hr/>
+<img width="1236" height="766" alt="WebUI preview 2 mask message" src="https://github.com/user-attachments/assets/347788ca-4cb3-489b-a64c-2cbf7efe2818" />
+<hr/>
+<img width="1287" height="697" alt="WebUI preview 3 live stream gateway" src="https://github.com/user-attachments/assets/8036ff9d-789c-43a8-a8bb-865aeba776c9" />
+
+
 ## Development & Contribution
 
 Contributions are welcome.
