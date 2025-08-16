@@ -6,6 +6,8 @@ RUN pip install uv
 
 COPY pyproject.toml .
 COPY src/ /app/src/
+COPY README.md .
+COPY LICENSE .
 
 RUN uv pip install --system '.[web]'
 
