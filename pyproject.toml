@@ -45,6 +45,10 @@ dev = [
     "pytest",
     "pytest-asyncio"
 ]
+docs = [
+    "mkdocs",
+    "mkdocstrings[python]>=0.18",
+]
 
 [project.scripts]
 promptmask-web = "promptmask.web.main:run_server"
