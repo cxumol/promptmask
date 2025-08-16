@@ -8,6 +8,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          paths: [../src]
           options:
             show_root_heading: no
             show_source: yes
