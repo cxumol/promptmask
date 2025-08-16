@@ -1,0 +1,10 @@
+# Git
+.git
+.gitignore
+
+# Ruff cache
+.ruff_cache/
+
+# Test files
+/tests
+/eval

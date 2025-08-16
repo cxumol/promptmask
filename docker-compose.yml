@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  promptmask:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./promptmask.config.user.toml:/app/promptmask.config.user.toml
