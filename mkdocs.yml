@@ -1,0 +1,16 @@
+site_name: PromptMask
+theme:
+  name: readthedocs
+repo_url: https://github.com/cxumol/promptmask
+repo_name: cxumol/promptmask
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_root_heading: yes
+            show_source: yes
+nav:
+  - Home: index.md
+  - API Reference: reference.md
