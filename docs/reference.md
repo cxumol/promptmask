@@ -1,3 +1,1 @@
 # API Reference
-
-::: promptmask
