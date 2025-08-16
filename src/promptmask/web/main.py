@@ -3,6 +3,7 @@
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 import httpx
 
 from contextlib import asynccontextmanager
@@ -38,6 +39,13 @@ app = FastAPI(
     description="A Web API for masking and unmasking sensitive data in text and chat messages.",
     lifespan=lifespan
 )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+) # All are allowed since the server is assumed to be on a local network
 app.include_router(gateway_router)
 
 @app.get("/", response_class=FileResponse, include_in_schema=False)
