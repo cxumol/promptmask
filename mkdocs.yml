@@ -11,7 +11,8 @@ plugins:
           paths: [../src]
           options:
             show_root_heading: no
-            show_source: yes
+            show_source: no
+            show_submodules: true
 nav:
   - Home: index.md
   - API Reference: reference.md
