@@ -1,7 +1,7 @@
 # examples/enhanced_openai_sdk.py
 
 import os
-from promptmask.adapter.openai import OpenAIMasked
+from promptmask import OpenAIMasked
 
 # NOTE: This example requires two things to run:
 # 1. A local LLM server (e.g., ollama, llama-cpp, vllm, etc.) running and exposing an
