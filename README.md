@@ -36,7 +36,7 @@ The core principle is to use a trusted (local) model as a "privacy filter" for a
 
 ## Quickstart
 
-### Choosing Your Integration Method
+### Choosing Integration Method and Model
 
 Use this table to find the best way to integrate PromptMask into your workflow:
 
@@ -44,6 +44,8 @@ Use this table to find the best way to integrate PromptMask into your workflow:
 | :--- | :--- | :--- |
 | **Python Developers** | Use the `OpenAIMasked` class.<br/>*A drop-in replacement for the `openai.OpenAI` client.* | Use the `PromptMask` class directly.<br/>*For granular control over mask/unmask operations.* |
 | **General Users<br/>(No Python)** | Use the **API Gateway**.<br/>*Point your existing apps to a local endpoint.* | Use the **Web UI & Direct API Endpoints**.<br/>*For interactive testing or non-standard tools.* |
+
+Choosing the right, capable local model can make data masking efforts twice as effective. See the [benchmark](eval/benchmark.md) to select a competent one that fits within your hardware limitations.
 
 ### Prerequisites
 

@@ -1,0 +1,35 @@
+# Benchmark Report
+
+## Evaluation Results
+
+|model|recall|fnr|fp_rate|err_rate|
+|---|---|---|---|---|
+|mollysama_rwkv-6-world_1.6b|41.94%|58.06%|79.69%|66.67%|
+|baidu_ernie-4.5-0.3b|55.13%|44.87%|32.26%|0.94%|
+|qwen_qwen3-4b-fp8|89.64%|10.36%|12.92%|0.31%|
+|granite3.1-moe_1b-instruct-q5_K_M|74.27%|25.73%|31.92%|0.62%|
+|qwen2.5_1.5b-instruct-q4_K_M|83.88%|16.12%|30.56%|0.62%|
+|phi3_3.8b|83.27%|16.73%|26.44%|2.81%|
+|granite3.3_2b|84.34%|15.66%|11.64%|3.12%|
+|meta-llama_llama-3.2-1b-instruct|78.22%|21.78%|47.77%|45.94%|
+|google_gemma-3-1b-it|84.55%|15.45%|33.89%|2.19%|
+|smollm2_1.7b-instruct-q4_K_M|75.14%|24.86%|31.73%|3.12%|
+|qwen3_1.7b-q4_K_M|80.73%|19.27%|14.52%|0.94%|
+|gpt-oss-120b-basic|84.73%|15.27%|5.36%|0.00%|
+
+## Metric Definitions
+
+- **err_rate:** `Number_of_Errors / Total_Number_of_Samples` The proportion of samples that failed to process due to system-level errors (e.g., parsing, timeout). 
+  > The total number of samples is derived from the source file using the following logic:
+    ```python
+    sum(len(max_map) for line in read(jsonl_fpath)[:TOTAL_LINES])
+    ```
+
+*The following classification metrics are calculated exclusively on successfully processed samples.*
+
+- **recall (TPR):** `TP / (TP + FN)` The proportion of actual positives that were correctly identified. 
+
+- **fnr (False Negative Rate):** `FN / (TP + FN)` The proportion of actual positives that were misclassified as negative. 
+    > `fnr = 1 - recall`
+
+- **fp_rate (False Positive Rate):** `FP / (FP + TN)` The proportion of actual negatives that were misclassified as positive. 
