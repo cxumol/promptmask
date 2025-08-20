@@ -9,7 +9,7 @@ from openai.types.chat.chat_completion_chunk import ChoiceDelta
 from types import SimpleNamespace
 
 from .config import load_config
-from .utils import _btwn, logger, is_dict_str_str
+from .utils import _btwn, logger, is_dict_str_str,  flatten_dict
 
 if not hasattr(ChoiceDelta, 'original_content'): # Static monkey patch
     ChoiceDelta.original_content: Optional[str] = None
@@ -94,6 +94,7 @@ class PromptMask:
             json_str = _btwn(response_content, "{", "}")
             logger.debug(f"json_str:: {json_str}")
             reversed_map = json.loads(json_str)
+            reversed_map = flatten_dict(reversed_map)
             if not is_dict_str_str(reversed_map):
                 raise TypeError("Mask map should be a dictionary mapping strings to strings.")
             # Ensure 1:1 mapping by reversing the map to check for duplicate masks
