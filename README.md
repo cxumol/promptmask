@@ -6,9 +6,11 @@ A local-first privacy layer for Large Language Models.
 Local AI **keeps your secret** but is dumb.  
 What if we can combine the advantages of both sides?
 
+![sync_to_HF](https://github.com/cxumol/CoverPilot/actions/workflows/hf_sync.yml/badge.svg)
 [![PyPI version](https://badge.fury.io/py/promptmask.svg?)](https://badge.fury.io/py/promptmask)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Versions](https://img.shields.io/pypi/pyversions/promptmask.svg)](https://pypi.org/project/promptmask/)
+[![Hugging Face](https://img.shields.io/badge/WebUI%20Demo%20-%F0%9F%A4%97%20Hugging%20Face%20(CPU)-blue)](https://huggingface.co/spaces/cxumol/promptmask-web)
 
 PromptMask ensures your private data never leaves your machines. It redacts and un-redacts sensitive data locally, so that only anonymized data is sent to third-party AI services.(*)
 
