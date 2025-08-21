@@ -69,7 +69,7 @@
         <section id="page-texts" class="active">
             <div class="two-column-layout">
                 <div class="column">
-                    <form onsubmit="event.preventDefault(); maskText()">
+                    <form onsubmit="event.preventDefault(); maskText(event)">
                         <label for="textInput">Original Text</label>
                         <textarea id="textInput" placeholder="e.g., My name is John Doe and my phone is 123-456-7890."></textarea>
                         <button type="submit">Mask →</button>
@@ -80,7 +80,7 @@
                     <textarea id="maskedTextOutput" placeholder="Masked text will appear here..."></textarea>
                     <label for="maskMapOutput">Mask Map</label>
                     <pre><code id="maskMapOutput">{...}</code></pre>
-                    <form onsubmit="event.preventDefault(); unmaskText()">
+                    <form onsubmit="event.preventDefault(); unmaskText(event)">
                         <button type="submit">← Unmask</button>
                     </form>
                     <label for="unmaskedTextOutput">Unmasked Text</label>
@@ -93,7 +93,7 @@
         <section id="page-chat">
             <div class="two-column-layout">
                 <div class="column">
-                    <form onsubmit="event.preventDefault(); maskMessages()">
+                    <form onsubmit="event.preventDefault(); maskMessages(event)">
                         <label>Original Messages</label>
                         <chat-interface id="chat-mask-editor" initial-messages='[{"role": "user", "content": "Hi, my name is Alice and I live at 123 Main St."}]'></chat-interface>
                         <button type="submit">Mask →</button>
@@ -104,7 +104,7 @@
                     <textarea id="maskedMessagesOutput" placeholder="Masked messages will appear here..."></textarea>
                     <label for="chatMaskMapOutput">Mask Map</label>
                     <pre><code id="chatMaskMapOutput">{...}</code></pre>
-                    <form onsubmit="event.preventDefault(); unmaskMessages()">
+                    <form onsubmit="event.preventDefault(); unmaskMessages(event)">
                         <button type="submit">← Unmask</button>
                     </form>
                     <label for="unmaskedMessagesOutput">Unmasked Messages (JSON)</label>
@@ -124,7 +124,7 @@
                 <hr>
                 <h3>Gateway Live Test (Chat Completion Stream)</h3>
                 <p>Upstream Target: <code id="upstreamTarget">loading...</code><br><small>This is controlled by <code>web.upstream_oai_api_base</code> in your configuration (<b>Settings</b> tab).</small></p>
-                <form onsubmit="event.preventDefault(); testGatewayStream()">
+                <form onsubmit="event.preventDefault(); testGatewayStream(event)">
                     <label>Request Headers</label>
                     <div id="gatewayHeadersContainer" class="headers-container">
                         <!-- Header rows will be added here by JS -->
@@ -158,7 +158,7 @@
              <article>
                 <h3>Configuration</h3>
                 <p>View and edit <code>promptmask.config.user.toml</code>. Changes are hot-reloaded on the server.</p>
-                <form onsubmit="event.preventDefault(); saveConfig()">
+                <form onsubmit="event.preventDefault(); saveConfig(event)">
                     <label for="configEditor">Config (JSON format for editing)</label>
                     <textarea id="configEditor" style="height:400px;"></textarea>
                     <button type="submit">Save & Reload Configuration</button>
@@ -207,7 +207,8 @@ var $=id=>document.getElementById(id), $$=q=>document.querySelectorAll(q);
 var post=(url,d)=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}).then(r=>{if(!r.ok)return r.json().then(e=>Promise.reject(new Error(e.detail||`HTTP ${r.status}`)));return r.json()});
 var get=url=>fetch(url).then(r=>{if(!r.ok)return r.json().then(e=>Promise.reject(new Error(e.detail||`HTTP ${r.status}`)));return r.json()});
 var notify=(el,msg,isError)=>{el.textContent=msg;el.style.color=isError?'red':'green';};
-async function handleApi(action,resultHandler,errorHandler){try{var r=await action();resultHandler(r);}catch(e){errorHandler(e);console.error(e);}}
+var manageButtonLoading=btn=>{if(!btn)return()=>{};var o=btn.textContent,s=Date.now();btn.disabled=!0;var i=setInterval(()=>{var e=(Date.now()-s)/1000;btn.textContent=`⌛️ waited for ${e.toFixed(1)} sec`},100);return()=>{clearInterval(i);btn.textContent=o;btn.disabled=!1}};
+async function handleApi(btn,action,resultHandler,errorHandler){var done=manageButtonLoading(btn);try{var r=await action();resultHandler(r);}catch(e){errorHandler(e);console.error(e);}finally{done();}}
 
 function createKeyValueEditor(c){
   var el=$(c.containerId);
@@ -337,9 +338,10 @@ function showPage(pageId, navEl) {
 
 
 // --- API Handlers ---
-function maskText() {
+function maskText(event) {
     var text = $('textInput').value;
     handleApi(
+        event.submitter,
         () => post('/v1/mask', { text }),
         (data) => {
             $('maskedTextOutput').value = data.masked_text;
@@ -350,11 +352,12 @@ function maskText() {
     );
 }
 
-function unmaskText() {
+function unmaskText(event) {
     try {
         var masked_text = $('maskedTextOutput').value;
         var mask_map = JSON.parse($('maskMapOutput').textContent);
         handleApi(
+            event.submitter,
             () => post('/v1/unmask', { masked_text, mask_map }),
             (data) => {
                 $('unmaskedTextOutput').value = data.text;
@@ -366,10 +369,11 @@ function unmaskText() {
     }
 }
 
-function maskMessages() {
+function maskMessages(event) {
     try {
         var messages = $('chat-mask-editor').getMessages();
         handleApi(
+            event.submitter,
             () => post('/v1/mask_messages', { messages }),
             (data) => {
                 $('maskedMessagesOutput').value = JSON.stringify(data.masked_messages, null, 2);
@@ -383,11 +387,12 @@ function maskMessages() {
     }
 }
 
-function unmaskMessages() {
+function unmaskMessages(event) {
     try {
         var masked_messages = JSON.parse($('maskedMessagesOutput').value);
         var mask_map = JSON.parse($('chatMaskMapOutput').textContent);
         handleApi(
+            event.submitter,
             () => post('/v1/unmask_messages', { masked_messages, mask_map }),
             (data) => {
                 $('unmaskedMessagesOutput').value = JSON.stringify(data.messages, null, 2);
@@ -429,7 +434,8 @@ function updateGatewayInfo() {
     });
 }
 
-async function testGatewayStream() {
+async function testGatewayStream(event) {
+    var done = manageButtonLoading(event.submitter);
     var unmaskedOutputElement = $('gatewayStreamOutput').querySelector('code');
     var originalOutputElement = $('gatewayStreamOriginalOutput').querySelector('code'); // New element
     unmaskedOutputElement.textContent = 'Connecting to stream...';
@@ -479,6 +485,8 @@ async function testGatewayStream() {
         unmaskedOutputElement.textContent = `Error: ${e.message}`;
         originalOutputElement.textContent = `Error: ${e.message}`;
         console.error(e);
+    } finally {
+        done();
     }
 }
 
@@ -497,12 +505,13 @@ function loadConfig() {
     );
 }
 
-function saveConfig() {
+function saveConfig(event) {
     var statusEl = $('configStatus');
     try {
         var config = JSON.parse($('configEditor').value);
         notify(statusEl, 'Saving and reloading...');
         handleApi(
+            event.submitter,
             () => post('/v1/config', config),
             (data) => {
                 notify(statusEl, data.message || 'Config saved and reloaded!');
