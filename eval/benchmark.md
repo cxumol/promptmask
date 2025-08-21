@@ -38,19 +38,18 @@ Within your hardware capabilities, choose the model with the lowest error rate a
     sum(len(max_map) for line in read(jsonl_fpath)[:TOTAL_LINES])
     ```
 
-*The following classification metrics are calculated exclusively on successfully processed samples.*
+*The following classification metrics are calculated exclusively on successfully processed samples. (`1-err_rate`)*
 
-- **recall (TPR):** `TP / (TP + FN)` The proportion of actual positives that were correctly identified. 
+- **recall (True Positive Rate, TPR):** `TP / (TP + FN)` Sensitive data which is correctly masked. 
 
-- **fnr (False Negative Rate):** `FN / (TP + FN)` The proportion of actual positives that were misclassified as negative. 
-    > `fnr = 1 - recall`
+- **fnr (False Negative Rate):** `FN / (TP + FN)` Sensitive data which is incorrectly missed. (`fnr = 1 - recall`)
 
-- **fp_rate (False Positive Rate):** `FP / (FP + TN)` The proportion of actual negatives that were misclassified as positive. 
+- **fp_rate (False Positive Rate):** `FP / (FP + TN)` Non-sensitive data which is incorrectly masked as sensitive. 
 
 ## Run Your Own Benchmark
 
 Evaluation Dataset: JSONL file, formatted as `{"source_text":"...", "privacy_mask":[{"value":"..."}, ...]}`
 
-Evaluation Settings: Configurate your settings in "eval/util.py", and make sure you have setup local LLM with a valid promptmask.config.user.toml file
+Evaluation Settings: Configurate your settings in "eval/util.py", and make sure you have setup local LLM with a valid "promptmask.config.user.toml" file
 
 Evaluation Script: Run step 1, 2, 3 by executing "eval/s[1-3]_*.py" to generate your benchmark report. 
