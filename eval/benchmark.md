@@ -48,8 +48,8 @@ Within your hardware capabilities, choose the model with the lowest error rate a
 
 ## Run Your Own Benchmark
 
-Evaluation Dataset: JSONL file, formatted as `{"source_text":"...", "privacy_mask":[{"value":"..."}, ...]}`
+- **Evaluation Dataset:** JSONL file, formatted as `{"source_text":"...", "privacy_mask":[{"value":"..."}, ...]}`
 
-Evaluation Settings: Configurate your settings in "eval/util.py", and make sure you have setup local LLM with a valid "promptmask.config.user.toml" file
+- **Evaluation Settings:** Configurate your settings in "eval/util.py", and make sure you have setup local LLM with a valid "promptmask.config.user.toml" file
 
-Evaluation Script: Run step 1, 2, 3 by executing "eval/s[1-3]_*.py" to generate your benchmark report at "eval/benchmark.md". 
+- **Evaluation Script:** Run step 1, 2, 3 by executing "eval/s[1-3]_*.py" to generate your benchmark report at "eval/benchmark.md". 
