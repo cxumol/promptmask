@@ -16,17 +16,20 @@ PromptMask ensures your private data never leaves your machines. It redacts and 
 
 ## Table of Contents
 
-* [Table of Contents](#table-of-contents)
-* [How It Works](#how-it-works)
-* [Quickstart](#quickstart)
+- [Table of Contents](#table-of-contents)
+- [How It Works](#how-it-works)
+- [Quickstart](#quickstart)
+    + [Choosing Integration Method and Model](#choosing-integration-method-and-model)
+        * [Models Benchmark](#models-benchmark)
     + [Prerequisites](#prerequisites)
     + [For General Users: local OpenAI-compatible API Gateway](#for-general-users-local-openai-compatible-api-gateway)
     + [For Python Developers: OpenAIMasked](#for-python-developers-openaimasked)
-* [Configuration](#configuration)
-* [Advanced Usage: PromptMask Class](#advanced-usage-promptmask-class)
-* [Web Server: WebUI & API](#web-server-webui--api)
-* [Development & Contribution](#development--contribution)
-* [License](#license)
+- [Configuration](#configuration)
+- [Advanced Usage: PromptMask Class](#advanced-usage-promptmask-class)
+- [Web Server: WebUI & API](#web-server-webui--api)
+    + [Web UI Preview](#web-ui-preview)
+- [Development & Contribution](#development--contribution)
+- [License](#license)
 
 ## How It Works
 
