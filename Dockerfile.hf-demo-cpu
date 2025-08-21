@@ -1,0 +1,71 @@
+# Stage 1: Build promptmask-web
+FROM python:3.11-slim as promptmask-builder
+
+WORKDIR /app
+
+RUN pip install uv
+
+# Copy project metadata and source code
+COPY pyproject.toml .
+COPY src/ /app/src/
+COPY README.md .
+COPY LICENSE .
+
+# installing into the base image's site-packages
+RUN uv pip install --system '.[web]'
+
+# Stage 2: promptmask-web and llama.cpp
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY --from=promptmask-builder /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
+COPY --from=promptmask-builder /usr/local/bin/promptmask-web /usr/local/bin/promptmask-web
+COPY --from=promptmask-builder /app/src/ /app/src/ # copy source if needed for dynamic loading or relative paths
+COPY --from=promptmask-builder /app/README.md .
+COPY --from=promptmask-builder /app/LICENSE .
+COPY --from=promptmask-builder /app/pyproject.toml .
+
+# --- Llama.cpp Integration ---
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app/llama.cpp
+
+# Hardcode for now
+ARG LLAMA_CPP_RELEASE_URL="https://github.com/ggml-org/llama.cpp/releases/download/b6218/llama-b6218-bin-ubuntu-x64.zip"
+ARG MODEL_URL="https://huggingface.co/mradermacher/Qwen2.5-1.5B-Instruct-abliterated-i1-GGUF/resolve/main/Qwen2.5-1.5B-Instruct-abliterated.i1-Q4_K_M.gguf"
+ARG MODEL_FILENAME="Qwen2.5-1.5B-Instruct-abliterated.i1-Q4_K_M.gguf"
+
+
+RUN curl -L "${LLAMA_CPP_RELEASE_URL}" -o llama.zip && \
+    unzip llama.zip && \
+    rm llama.zip && \
+    chmod +x build/bin/llama-server
+
+# Download the GGUF model
+RUN mkdir -p models && \
+    curl -L "${MODEL_URL}" -o models/${MODEL_FILENAME}
+
+# Define environment variables for llama.cpp server and model paths
+ENV LLAMA_CPP_SERVER_PATH="/app/llama.cpp/build/bin/llama-server"
+ENV LLAMA_CPP_MODEL_PATH="/app/llama.cpp/models/${MODEL_FILENAME}"
+ENV LLAMA_CPP_HOST="127.0.0.1"
+ENV LLAMA_CPP_PORT="8080"
+ENV LOCALAI_API_BASE="http://127.0.0.1:8080/v1"
+
+# main dir
+WORKDIR /app
+
+# promptmask-web
+EXPOSE 8000
+# No need to expose llama.cpp server
+# EXPOSE 8080
+
+ARG START_SH="start-cpu-llamacpp.sh"
+COPY ${START_SH} .
+RUN chmod +x ${START_SH}
+CMD ["./${START_SH}"]
