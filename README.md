@@ -42,10 +42,14 @@ Use this table to find the best way to integrate PromptMask into your workflow:
 
 | | **For Existing OpenAI-compatible Tools** | **For Custom Integration / Direct Use** |
 | :--- | :--- | :--- |
-| **Python Developers** | Use the `OpenAIMasked` class.<br/>*A drop-in replacement for the `openai.OpenAI` client.* | Use the `PromptMask` class directly.<br/>*For granular control over mask/unmask operations.* |
-| **General Users<br/>(No Python)** | Use the **API Gateway**.<br/>*Point your existing apps to a local endpoint.* | Use the **Web UI & Direct API Endpoints**.<br/>*For interactive testing or non-standard tools.* |
+| **Python Developers** | `from promptmask import OpenAIMasked` <br/>*A drop-in replacement for the `openai.OpenAI` client.* | `from promptmask import PromptMask`<br/>*For granular control over mask/unmask operations.* |
+| **General Users<br/>(No Python)** | `http://localhost:8000/gateway/v1/chat/completions` <br/>*Point your existing apps to a local endpoint.* | Web UI `http://localhost:8000/` & Web API `http://localhost:8000/docs` <br/>*For interactive testing or non-standard tools.* |
 
-Choosing the right, capable local model can make data masking efforts twice as effective. See the [benchmark](eval/benchmark.md) to select a competent one that fits within your hardware limitations.
+#### Models Benchmark
+
+> Choosing the right, capable local model can make data masking efforts twice as effective. 
+
+See the [benchmark](eval/benchmark.md) to select a competent one that fits within your hardware limitations. Alternatively, run your own benchmarks using `python eval/s[1,2,3]_*.py`.
 
 ### Prerequisites
 
@@ -149,6 +153,8 @@ The `OpenAIMasked` class is a drop-in replacement for the standard `openai.OpenA
     for chunk in stream:
         print(chunk.choices[0].delta.content or "", end="")
     ```
+
+See more examples at [examples/](examples/).
 
 ## Configuration
 
