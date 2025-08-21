@@ -435,11 +435,11 @@ function updateGatewayInfo() {
 }
 
 async function testGatewayStream(event) {
-    var done = manageButtonLoading(event.submitter);
+    var reEnableButton = manageButtonLoading(event.submitter);
     var unmaskedOutputElement = $('gatewayStreamOutput').querySelector('code');
     var originalOutputElement = $('gatewayStreamOriginalOutput').querySelector('code'); // New element
     unmaskedOutputElement.textContent = 'Connecting to stream...';
-    originalOutputElement.textContent = ''; // Clear original output area
+    originalOutputElement.textContent = 'Connecting to stream...';
     
     try {
         var messages = $('gatewayChatEditor').getMessages();
@@ -460,7 +460,10 @@ async function testGatewayStream(event) {
 
         while (true) {
             var { value, done } = await reader.read();
-            if (done) break;
+            if (done) {
+                reEnableButton();
+                break;
+            }
             
             var chunk = decoder.decode(value, { stream: true });
             var lines = chunk.split('\n').filter(line => line.trim() !== '');
@@ -485,8 +488,7 @@ async function testGatewayStream(event) {
         unmaskedOutputElement.textContent = `Error: ${e.message}`;
         originalOutputElement.textContent = `Error: ${e.message}`;
         console.error(e);
-    } finally {
-        done();
+        reEnableButton();
     }
 }
 
