@@ -128,7 +128,7 @@ class PromptMask:
         )
             return completion.choices[0].message.content
         except APITimeoutError as e:
-            return str({"err":type(e).__name__})
+            return json.dumps({"err":type(e).__name__})
 
     async def _async_oai_chat_comp(self, messages: List[Dict[str, str]]) -> str:
         """Asynchronous chat completion call."""
@@ -140,7 +140,7 @@ class PromptMask:
             )
             return completion.choices[0].message.content
         except APITimeoutError as e:
-            return str({"err":type(e).__name__})
+            return json.dumps({"err":type(e).__name__})
 
     # --- Synchronous Methods ---
 
