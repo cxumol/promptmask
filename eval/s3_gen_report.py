@@ -7,6 +7,8 @@ MD_FPATH = os.path.join(current_directory, "benchmark.md")
 def main(markdown_table:str):
     tmpl = """# Benchmark Report
 
+Within your hardware capabilities, choose the model with the lowest error rate and the highest recall.
+
 ## Evaluation Results
 
 {table}
@@ -27,6 +29,14 @@ def main(markdown_table:str):
     > `fnr = 1 - recall`
 
 - **fp_rate (False Positive Rate):** `FP / (FP + TN)` The proportion of actual negatives that were misclassified as positive. 
+
+## Run Your Own Benchmark
+
+Evaluation Dataset: JSONL file, formatted as `{{"source_text":"...", "privacy_mask":[{{"value":"..."}}, ...]}}`
+
+Evaluation Settings: Configurate your settings in "eval/util.py", and make sure you have setup local LLM with a valid promptmask.config.user.toml file
+
+Evaluation Script: Run step 1, 2, 3 by executing "eval/s[1-3]_*.py" to generate your benchmark report. 
 """
     final_report = tmpl.format(table=markdown_table)
     try:

@@ -10,8 +10,8 @@ from tqdm import tqdm
 
 from util import tomllib, mkdirp, prepare_dataset, fpath_sanitize, fn_timer, TOTAL_LINES, RAW_RESULT_DIR, DATASET_DIR
 
-CONFIG_PATH = "promptmask.config.batch-novita.toml"
-BATCH_SIZE = 10
+CONFIG_PATH = "promptmask.config.batch-ollama.toml"
+BATCH_SIZE = 1
 
 prepare_pm = lambda model="": PromptMask(config={"llm_api":{"model":model}}, config_file=CONFIG_PATH)
 def get_model_list():

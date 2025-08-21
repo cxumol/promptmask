@@ -66,22 +66,33 @@ def main():
 
         eval_data.append({
             "model": basefname.split(".masked.jsonl")[0],
-            "recall": f"{recall:.2%}", # True Positive Rate, correct rate
-            "fnr": f"{fnr:.2%}",      # False Negative Rate, missed rate
-            "fp_rate": f"{fpr:.2%}", # False Positive Rate (relative to predictions), wrong pred rate
-            "err_rate": f"{errr:.2%}"
+            "err_rate": errr, 
+            "recall": recall,
+            "fnr": fnr,
+            "fp_rate": fpr
         })
         print(f"{basefname}  - Recall: {recall:.2%}, FN: {fnr:.2%}, FP: {fpr:.2%}, Err: {errr:.2%}")
 
     # Write to a CSV file
     if eval_data:
+        # Sort by ascending err_rate, then by descending recall
+        eval_data.sort(key=lambda item: (item['err_rate'], -item['recall']))
+
+        csv_output_data = [{
+                "model": row["model"],
+                "err_rate": f"{row['err_rate']:.2%}",
+                "recall": f"{row['recall']:.2%}",
+                "fnr": f"{row['fnr']:.2%}",
+                "fp_rate": f"{row['fp_rate']:.2%}"
+            } for row in eval_data]
+
         print(f"\nWriting eval_data to '{eval_csv_path}'...")
         # Use English abbreviations for headers as requested
-        fieldnames = ["model", "recall", "fnr", "fp_rate", "err_rate"]
+        fieldnames = ["model", "err_rate", "recall", "fnr", "fp_rate"]
         with open(eval_csv_path, 'w', newline='', encoding='utf-8') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
-            writer.writerows(eval_data)
+            writer.writerows(csv_output_data)
         print("Done.")
     # debug_writer.close()
 

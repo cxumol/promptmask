@@ -1,21 +1,34 @@
 # Benchmark Report
 
+Within your hardware capabilities, choose the model with the lowest error rate and the highest recall.
+
 ## Evaluation Results
 
-|model|recall|fnr|fp_rate|err_rate|
+|model|err_rate|recall|fnr|fp_rate|
 |---|---|---|---|---|
-|mollysama_rwkv-6-world_1.6b|41.94%|58.06%|79.69%|66.67%|
-|baidu_ernie-4.5-0.3b|55.13%|44.87%|32.26%|0.94%|
-|qwen_qwen3-4b-fp8|89.64%|10.36%|12.92%|0.31%|
-|granite3.1-moe_1b-instruct-q5_K_M|74.27%|25.73%|31.92%|0.62%|
-|qwen2.5_1.5b-instruct-q4_K_M|83.88%|16.12%|30.56%|0.62%|
-|phi3_3.8b|83.27%|16.73%|26.44%|2.81%|
-|granite3.3_2b|84.34%|15.66%|11.64%|3.12%|
-|meta-llama_llama-3.2-1b-instruct|78.22%|21.78%|47.77%|45.94%|
-|google_gemma-3-1b-it|84.55%|15.45%|33.89%|2.19%|
-|smollm2_1.7b-instruct-q4_K_M|75.14%|24.86%|31.73%|3.12%|
-|qwen3_1.7b-q4_K_M|80.73%|19.27%|14.52%|0.94%|
-|gpt-oss-120b-basic|84.73%|15.27%|5.36%|0.00%|
+|qwen_qwen3-4b-fp8|0.00%|90.22%|9.78%|12.19%|
+|gpt-oss_20b|0.00%|88.16%|11.84%|4.28%|
+|qwen2.5_1.5b-instruct-q4_K_M|0.00%|83.88%|16.12%|30.64%|
+|phi3_3.8b|0.00%|83.88%|16.12%|28.09%|
+|@cf_qwen_qwen1.5-14b-chat-awq|0.31%|88.12%|11.88%|17.29%|
+|@hf_thebloke_deepseek-coder-6.7b-instruct-awq|0.31%|87.82%|12.18%|10.96%|
+|gemma3n_e2b-it-q4_K_M|0.31%|87.09%|12.91%|22.63%|
+|qwen3_1.7b-q4_K_M|0.31%|81.79%|18.21%|13.92%|
+|granite3.1-moe_1b-instruct-q5_K_M|0.31%|74.61%|25.39%|30.84%|
+|granite3.3_2b|0.62%|84.55%|15.45%|12.57%|
+|qwen3_4b-instruct-2507-q4_K_M|0.62%|83.33%|16.67%|4.76%|
+|dolphin-mistral_7b-v2.8-q4_K_M|1.25%|91.26%|8.74%|10.92%|
+|@cf_qwen_qwen1.5-7b-chat-awq|1.25%|74.70%|25.30%|36.05%|
+|baidu_ernie-4.5-0.3b|1.56%|49.74%|50.26%|32.86%|
+|google_gemma-3-1b-it|2.50%|84.62%|15.38%|33.85%|
+|smollm2_1.7b-instruct-q4_K_M|2.50%|74.82%|25.18%|32.95%|
+|@cf_qwen_qwen1.5-1.8b-chat|2.81%|71.85%|28.15%|35.48%|
+|phi4-mini_3.8b-q4_K_M|3.44%|64.39%|35.61%|22.68%|
+|@hf_google_gemma-7b-it|5.31%|66.42%|33.58%|18.10%|
+|meta-llama_llama-3.2-1b-instruct|49.38%|79.21%|20.79%|47.88%|
+|@hf_mistral_mistral-7b-instruct-v0.2|65.31%|82.76%|17.24%|23.81%|
+|@cf_microsoft_phi-2|97.50%|63.33%|36.67%|32.14%|
+|@hf_thebloke_mistral-7b-instruct-v0.1-awq|99.69%|100.00%|0.00%|0.00%|
 
 ## Metric Definitions
 
@@ -33,3 +46,11 @@
     > `fnr = 1 - recall`
 
 - **fp_rate (False Positive Rate):** `FP / (FP + TN)` The proportion of actual negatives that were misclassified as positive. 
+
+## Run Your Own Benchmark
+
+Evaluation Dataset: JSONL file, formatted as `{"source_text":"...", "privacy_mask":[{"value":"..."}, ...]}`
+
+Evaluation Settings: Configurate your settings in "eval/util.py", and make sure you have setup local LLM with a valid promptmask.config.user.toml file
+
+Evaluation Script: Run step 1, 2, 3 by executing "eval/s[1-3]_*.py" to generate your benchmark report. 
