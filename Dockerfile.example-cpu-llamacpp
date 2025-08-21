@@ -15,6 +15,7 @@ WORKDIR /app/llama.cpp
 ARG LLAMA_CPP_RELEASE_URL="https://github.com/ggml-org/llama.cpp/releases/download/b6218/llama-b6218-bin-ubuntu-x64.zip"
 ARG MODEL_URL="https://huggingface.co/mradermacher/Qwen2.5-1.5B-Instruct-abliterated-i1-GGUF/resolve/main/Qwen2.5-1.5B-Instruct-abliterated.i1-Q4_K_M.gguf"
 ARG MODEL_FILENAME="Qwen2.5-1.5B-Instruct-abliterated.i1-Q4_K_M.gguf"
+#ARG MODEL_FILENAME="qwen2.5-1.5b-instruct-q4_k_m.gguf"
 
 
 RUN curl -L "${LLAMA_CPP_RELEASE_URL}" -o llama.zip && \
@@ -36,14 +37,17 @@ ENV LOCALAI_API_BASE="http://127.0.0.1:8080/v1"
 # main dir
 WORKDIR /app
 
-RUN pip install promptmask[web]
+RUN pip install --upgrade --pre --no-cache-dir promptmask[web]
 
 # promptmask-web
 EXPOSE 8000
 # No need to expose llama.cpp server
 # EXPOSE 8080
 
-ARG START_SH="start-cpu-llamacpp.sh"
-COPY ${START_SH} .
+ENV START_SH="start-cpu-llamacpp.sh"
+ARG START_SH_URL="https://github.com/cxumol/promptmask/raw/refs/heads/master/start-cpu-llamacpp.sh"
+RUN curl -L "${START_SH_URL}" -o "${START_SH}"
 RUN chmod +x ${START_SH}
-CMD ["./${START_SH}"]
+# COPY  promptmask.config.user.toml .
+RUN if [ -f promptmask.config.user.toml ]; then cp promptmask.config.user.toml /app/; fi
+CMD ./${START_SH}
