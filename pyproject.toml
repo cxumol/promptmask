@@ -6,7 +6,7 @@ build-backend = "uv_build"
 
 [project]
 name = "promptmask"
-version = "0.1.1b"
+version = "0.1.1"
 authors = [
     { name = "cxumol", email = "cxumol@gmail.com" },
 ]
