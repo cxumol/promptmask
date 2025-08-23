@@ -46,7 +46,7 @@ The core principle is to use a trusted (local) model as a "privacy filter" for a
 
 Use this table to find the best way to integrate PromptMask into your workflow:
 
-| | **For Existing OpenAI-compatible Tools** | **For Custom Integration / Direct Use** |
+| | **Existing OpenAI-compatible Tools** | **Direct Use / Custom Integration** |
 | :--- | :--- | :--- |
 | **Python Developers** | `from promptmask import OpenAIMasked as OpenAI` <br/>*A drop-in replacement for the `openai.OpenAI` client.* | `from promptmask import PromptMask`<br/>*For granular control over mask/unmask operations.* |
 | **General Users<br/>(No Python)** | `http://localhost:8000/gateway/v1/chat/completions` <br/>*Point your existing apps to a local endpoint.* | Web UI `http://localhost:8000/` & Web API `http://localhost:8000/docs` <br/>*For interactive testing or non-standard tools.* |
@@ -110,17 +110,17 @@ Point any existing tool/app at the local gateway. It's the seamless way to add `
 
 ### For Python Developers: OpenAIMasked
 
-The `OpenAIMasked` class is a drop-in replacement for the standard `openai.OpenAI` client.
+The `OpenAIMasked` class is a drop-in replacement for the official `openai.OpenAI` SDK.
 
 1.  **Install the base package:**
     ```bash
     pip install promptmask
     ```
 
-2.  **Mask the OpenAI client in your code:**
+2.  **Mask the OpenAI SDK in your code:**
     The adapter automatically handles masking/unmasking for standard and streaming requests.
 
-    Simply replace the standard `openai.OpenAI` client as follows:
+    Simply replace `openai.OpenAI` as follows:
 
     ```python
     # from openai import OpenAI
@@ -133,7 +133,7 @@ The `OpenAIMasked` class is a drop-in replacement for the standard `openai.OpenA
     ```python
     from promptmask import OpenAIMasked as OpenAI
 
-    # openai.OpenAI client, but with automatic privacy redaction.
+    # openai.OpenAI, but with automatic privacy redaction.
     client = OpenAI(base_url="https://api.cloud-ai-service.example.com/v1") # reads OPENAI_API_KEY from env
 
     # non-stream
@@ -201,9 +201,9 @@ Environment variables to override specific settings:
 
 </details>
 
-## Advanced Usage: PromptMask Class
+## Advanced Usage: PromptMask
 
-For more granular control, you can import the `PromptMask` class directly to perform masking and unmasking as separate steps.
+For granular control, import `PromptMask` directly to perform masking and unmasking as separate steps.
 
 ```python
 import asyncio # PromptMask also runs syncrounously
