@@ -6,7 +6,8 @@ A local-first privacy layer for Large Language Models.
 Local AI **keeps your secret** but is dumb.  
 What if we can combine the advantages of both sides?
 
-![Docker Image Build](https://github.com/cxumol/promptmask/actions/workflows/docker-publish.yml/badge.svg)
+![Docker Image](https://github.com/cxumol/promptmask/actions/workflows/docker-publish.yml/badge.svg)
+![PyPI Packging](https://github.com/cxumol/promptmask/actions/workflows/python-publish.yml/badge.svg)
 [![PyPI version](https://badge.fury.io/py/promptmask.svg?)](https://badge.fury.io/py/promptmask)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Versions](https://img.shields.io/pypi/pyversions/promptmask.svg)](https://pypi.org/project/promptmask/)
