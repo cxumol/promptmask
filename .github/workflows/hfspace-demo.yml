@@ -1,9 +1,8 @@
 name: Sync to Hugging Face Space
 on:
-  non_existent_event:
 #   push:
 #     branches: [master]
-#   workflow_dispatch:
+  workflow_dispatch: # don't trigger, should regarded as be disabled
 
 jobs:
   sync-to-hf-space:
@@ -16,4 +15,4 @@ jobs:
       - name: Push to hf-space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://cxumol:$HF_TOKEN@huggingface.co/spaces/cxumol/promptmask-web master:main
+        run: git push https://cxumol:$HF_TOKEN@huggingface.co/spaces/cxumol/promptmask-web master:main
