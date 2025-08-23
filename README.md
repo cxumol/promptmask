@@ -48,7 +48,7 @@ Use this table to find the best way to integrate PromptMask into your workflow:
 
 | | **For Existing OpenAI-compatible Tools** | **For Custom Integration / Direct Use** |
 | :--- | :--- | :--- |
-| **Python Developers** | `from promptmask import OpenAIMasked` <br/>*A drop-in replacement for the `openai.OpenAI` client.* | `from promptmask import PromptMask`<br/>*For granular control over mask/unmask operations.* |
+| **Python Developers** | `from promptmask import OpenAIMasked as OpenAI` <br/>*A drop-in replacement for the `openai.OpenAI` client.* | `from promptmask import PromptMask`<br/>*For granular control over mask/unmask operations.* |
 | **General Users<br/>(No Python)** | `http://localhost:8000/gateway/v1/chat/completions` <br/>*Point your existing apps to a local endpoint.* | Web UI `http://localhost:8000/` & Web API `http://localhost:8000/docs` <br/>*For interactive testing or non-standard tools.* |
 
 #### Models Benchmark
@@ -124,18 +124,17 @@ The `OpenAIMasked` class is a drop-in replacement for the standard `openai.OpenA
 
     ```python
     # from openai import OpenAI
-    from promptmask import OpenAIMasked
-    # client = OpenAI()
-    client = OpenAIMasked()
+    from promptmask import OpenAIMasked as OpenAI
+    client = OpenAI()
     ```
 
     Full example:
 
     ```python
-    from promptmask import OpenAIMasked
+    from promptmask import OpenAIMasked as OpenAI
 
     # openai.OpenAI client, but with automatic privacy redaction.
-    client = OpenAIMasked(base_url="https://api.cloud-ai-service.example.com/v1") # reads OPENAI_API_KEY from environment variables by default.
+    client = OpenAI(base_url="https://api.cloud-ai-service.example.com/v1") # reads OPENAI_API_KEY from env
 
     # non-stream
     response = client.chat.completions.create(
