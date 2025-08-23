@@ -1,5 +1,6 @@
-# name: Sync to Hugging Face Space
-# on:
+name: Sync to Hugging Face Space
+on:
+  non_existent_event:
 #   push:
 #     branches: [master]
 #   workflow_dispatch:
