@@ -176,6 +176,11 @@ model = "qwen2.5:7b"
 # Define what data is considered sensitive.
 [sensitive]
 include = "personal ID and passwords" # Override the default one
+
+# Change the default mask wrapper.
+[mask_wrapper]
+left = "__"
+right = "__"
 ```
 
 Check [promptmask.config.default.toml](src/promptmask/promptmask.config.default.toml) for a full config file example. 
