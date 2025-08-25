@@ -22,15 +22,15 @@ PromptMask ensures your private data never leaves your machines. It redacts and 
 - [Table of Contents](#table-of-contents)
 - [How It Works](#how-it-works)
 - [Quickstart](#quickstart)
-    + [Choosing Integration Method and Model](#choosing-integration-method-and-model)
-        * [Models Benchmark](#models-benchmark)
-    + [Prerequisites](#prerequisites)
-    + [For General Users: local OpenAI-compatible API Gateway](#for-general-users-local-openai-compatible-api-gateway)
-    + [For Python Developers: OpenAIMasked](#for-python-developers-openaimasked)
+  + [Choosing Integration Method](#choosing-integration-method)
+  + [Prerequisites](#prerequisites)
+     * [Choosing a Model with Benchmarks](#choosing-a-model-with-benchmarks)
+  + [For General Users: local OpenAI-compatible API Gateway](#for-general-users-local-openai-compatible-api-gateway)
+  + [For Python Developers: OpenAIMasked](#for-python-developers-openaimasked)
 - [Configuration](#configuration)
-- [Advanced Usage: PromptMask Class](#advanced-usage-promptmask-class)
+- [Advanced Usage: PromptMask](#advanced-usage-promptmask)
 - [Web Server: WebUI & API](#web-server-webui--api)
-    + [Web UI Preview](#web-ui-preview)
+  + [Web UI Preview](#web-ui-preview)
 - [Development & Contribution](#development--contribution)
 - [License](#license)
 
@@ -42,20 +42,14 @@ The core principle is to use a trusted (local) model as a "privacy filter" for a
 
 ## Quickstart
 
-### Choosing Integration Method and Model
+### Choosing Integration Method
 
 Use this table to find the best way to integrate PromptMask into your workflow:
 
 | | **Existing OpenAI-compatible Tools** | **Direct Use / Custom Integration** |
 | :--- | :--- | :--- |
-| **Python Developers** | `from promptmask import OpenAIMasked as OpenAI` <br/>*A drop-in replacement for the `openai.OpenAI` client.* | `from promptmask import PromptMask`<br/>*For granular control over mask/unmask operations.* |
-| **General Users<br/>(No Python)** | `http://localhost:8000/gateway/v1/chat/completions` <br/>*Point your existing apps to a local endpoint.* | Web UI `http://localhost:8000/` & Web API `http://localhost:8000/docs` <br/>*For interactive testing or non-standard tools.* |
-
-#### Models Benchmark
-
-> Choosing the right, capable local model can make data masking efforts twice as effective. 
-
-See the [benchmark](eval/benchmark.md) to select a competent one that fits within your hardware limitations. Alternatively, run your own benchmarks using `python eval/s[1,2,3]_*.py`.
+| **Python Developers** | `from promptmask import OpenAIMasked as OpenAI` <br/>A drop-in replacement for the `openai.OpenAI` client | `from promptmask import PromptMask`<br/>For granular control over mask/unmask operations |
+| **General Users<br/>(No Python)** | `http://localhost:8000/gateway/v1/chat/completions` <br/>Point your existing apps to `promptmask-web`'s local endpoint | Web UI `http://localhost:8000/` & Web API `http://localhost:8000/docs` <br/>For interactive testing or non-standard tools |
 
 ### Prerequisites
 
@@ -66,6 +60,18 @@ By default, `PromptMask` will attempt to connect to `http://localhost:11434/v1` 
 > 
 > Don't worry if you don't have a local LLM. PromptMask won't restrict a local address. You can always set a remote (trusted) endpoint as PromptMask's LLM API, such as a self-hosted GPU cloud or your trusted AI service provider.  
 
+#### Choosing a Model with Benchmarks
+
+> Choosing the right, capable local model can make data masking efforts twice as effective. 
+
+See the [benchmark](eval/benchmark.md) to select a competent model that fits within your hardware limitations. Alternatively, run your own benchmarks using `python eval/s[1,2,3]_*.py`.
+
+Local LLM Model ID can be specified in your config file (more detail on [configuration](#configuration) section)
+
+```toml
+[llm_api]
+model = "qwen2.5:7b"
+```
 
 ### For General Users: local OpenAI-compatible API Gateway
 
@@ -169,7 +175,7 @@ To customize, create a `promptmask.config.user.toml` file in working directory. 
 # promptmask.config.user.toml
 
 [llm_api]
-# Specify a particular local model to use for masking; model name depends on the inference engine
+# Specify a particular local model to use for masking; model name depends on the inference engine; leave it empty to auto select the 1st one on /v1/models
 model = "qwen2.5:7b"
 
 # Define what data is considered sensitive.
