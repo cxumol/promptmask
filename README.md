@@ -8,6 +8,7 @@ What if we can combine the advantages of both sides?
 
 ![Docker Image](https://github.com/cxumol/promptmask/actions/workflows/docker-publish.yml/badge.svg)
 ![Publish to PyPI](https://github.com/cxumol/promptmask/actions/workflows/python-publish.yml/badge.svg)
+[![rtfd CI](https://app.readthedocs.org/projects/promptmask/badge/)](https://promptmask.rtfd.org/)
 [![PyPI version](https://badge.fury.io/py/promptmask.svg?)](https://badge.fury.io/py/promptmask)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Versions](https://img.shields.io/pypi/pyversions/promptmask.svg)](https://pypi.org/project/promptmask/)
@@ -39,6 +40,8 @@ PromptMask ensures your private data never leaves your machines. It redacts and 
 The core principle is to use a trusted (local) model as a "privacy filter" for a powerful, remote model. The process is fully automated.
 
 ![promptmask-workflow-digram](docs/assets/promptmask-workflow-digram.png)
+
+I wrote a blog post with more details on the why and how: [How Not to Give AI Companies Your Secrets](https://xirtam.cxumol.com/promptmask-how-not-give-ai-secrets/)
 
 ## Quickstart
 
