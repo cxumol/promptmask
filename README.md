@@ -10,6 +10,7 @@ What if we can combine the advantages of both sides?
 ![Publish to PyPI](https://github.com/cxumol/promptmask/actions/workflows/python-publish.yml/badge.svg)
 [![rtfd CI](https://app.readthedocs.org/projects/promptmask/badge/)](https://promptmask.rtfd.org/)
 [![PyPI version](https://badge.fury.io/py/promptmask.svg?)](https://badge.fury.io/py/promptmask)
+[![PyPI Downloads](https://img.shields.io/pepy/dt/promptmask)](https://pepy.tech/projects/promptmask)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Versions](https://img.shields.io/pypi/pyversions/promptmask.svg)](https://pypi.org/project/promptmask/)
 [![Hugging Face](https://img.shields.io/badge/WebUI%20Demo%20-%F0%9F%A4%97%20Hugging%20Face%20(CPU,%20Slow)-blue)](https://huggingface.co/spaces/cxumol/promptmask-web)
